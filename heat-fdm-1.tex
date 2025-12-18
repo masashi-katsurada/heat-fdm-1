@@ -1,0 +1,7045 @@
+\documentclass[12pt,leqno]{ujreport}
+
+\usepackage{theorem}\theorembodyfont{\upshape}
+\usepackage[a4paper,vscale=0.85,hscale=0.84]{geometry}
+\usepackage{amssymb,verbatimfiles,ascmac,mymacro2es,nruby}
+%\usepackage{eclepsf}
+\usepackage[dvips]{graphicx}
+\usepackage{enumerate}
+\usepackage{url}
+\usepackage{hthtml}
+\usepackage{amsmath}
+\usepackage[dvips]{color}
+\usepackage{gouji}
+\usepackage{bm}
+\usepackage{otf}
+
+%\bibliographystyle{jplain}
+\bibliographystyle{tipsj}
+
+\usepackage[dvipdfmx,%
+bookmarks=true,bookmarksnumbered=true,bookmarkstype=toc,%
+colorlinks=true,% 
+%colorlinks=false,%
+linkcolor=blue,%
+citecolor=blue,%
+filecolor=blue,%
+pagecolor=blue,%
+urlcolor=blue%
+]{hyperref}
+%
+\usepackage{pxjahyper}
+
+\begin{document}
+
+\title{\textbf{熱方程式に対する差分法 I}\\
+\large --- 区間における熱方程式 ---}
+\author{桂田 祐史}
+\西暦
+\date{1998年〜 \today}
+\maketitle
+
+\tableofcontents
+
+\chapter*{序}
+
+  この文書では、
+開区間における熱伝導方程式の初期値境界値問題の差分法による解法を扱う。
+
+\section*{他の文書の紹介}
+
+\begin{enumerate}
+\item 「発展系の数値解析」\\
+  \url{https://m-katsurada.sakura.ne.jp/labo/text/heat-fdm-0.pdf}\\
+放送大学の講義科目「応用数学」 (藤田宏担当,
+私も差分法のところをお手伝いしました) のテキストの一部です。
+1次元区間における熱方程式の初期値境界値問題に対する差分法の
+入門的解説です。 \\
+もともとは藤田先生と共同で担当していた卒研の内容から、
+適当な部分を抜き出したものです。
+最初に参考にしたのは、
+菊地文雄・山本昌宏「微分方程式と計算機演習」山海堂、
+という本です。
+%
+\item
+  「『発展系の数値解析』に加えること」\\
+  \url{https://m-katsurada.sakura.ne.jp/labo/text/heat-fdm-0-add.pdf}\\
+  1 はそのまま卒研のテキストとして使うには不便なところがあるので、
+少し補ったものです。
+LU 分解や安定性を解析するための行列法などを説明してあります。
+%
+\item
+  「熱方程式に対する差分法 I --- 区間における熱方程式 ---」 \\
+  \url{https://m-katsurada.sakura.ne.jp/labo/text/heat-fdm-1.pdf}\\
+  この文書です。
+  2次元の区間、つまり長方形領域における熱方程式を扱っています。
+%
+\item
+「熱方程式に対する差分法 II --- 円盤領域、円柱領域、球における熱方程式 ---」 \\
+  \url{https://m-katsurada.sakura.ne.jp/labo/text/heat-fdm-2.pdf}\\
+  ここはまだ基本的に工事中です。
+\end{enumerate}
+
+熱方程式ではないですが、
+\begin{enumerate}
+\item 「Poisson方程式に対する差分法」\\
+  \url{https://m-katsurada.sakura.ne.jp/labo/text/poisson.pdf} \\
+  2次元長方形領域における Poisson 方程式の差分解の
+厳密解への収束証明 (これは内容的には、F.~John の本を読み解いたものです) と、
+プログラムなどを載せています。
+%
+\item 「波動方程式に対する差分法」 \\
+  \url{https://m-katsurada.sakura.ne.jp/labo/text/wave.pdf} \\
+$1$次元波動方程式の初期値境界値問題に対する差分法の収束証明などを書いてあります。
+\end{enumerate}
+
+なお、プログラムの多くは、
+\begin{quote}
+  「公開プログラムのページ」\\
+  \url{https://m-katsurada.sakura.ne.jp/program/}
+\end{quote}
+に置いてあります。
+
+\section*{私の研究室周辺での差分法による熱方程式とのお付き合い}
+
+  卒業研究レポートについては、
+\url{https://m-katsurada.sakura.ne.jp/labo/report/}
+を見よ。
+
+  1994 年度の桂田ゼミの卒業研究で、
+初めて空間 2 次元の熱方程式の初期値境界値問題を解くプログラムが出来た
+(by 志村結城、山口尚人)。
+彼らのプログラムは行列の対称化は行わずに、
+LU 分解を行って解くものであった。
+バンド幅は考慮に入れないなど、素朴なプログラムである。
+はじめて目にした実行結果はなかなか印象的であった。
+最初に LU 分解をするため、第1段の結果が出るまでかなり時間がかかる。
+しかしその後は軽快にステップが進む。
+彼らは Dirichlet 境界値問題のみならず、Neumann 境界値問題も扱っている。
+
+  また 1994 年度修士論文の研究では、
+空間2次元の楕円型境界値問題 (定常移流拡散方程式) が解かれている
+(by 上野 康浩)。
+
+  1995年度の桂田ゼミの卒業研究のテーマは有限要素法だったが、有限要素法
+による解と比較をするため、熱方程式を差分法で解くプログラムが作られた 
+(有限要素法版はなかなかの力作 --- by 川崎 純也)。
+
+  1995 年度の修士論文の研究では、
+領域分割法の研究のため、
+やはり空間2次元のポアソン方程式の境界値問題が差分法で解かれている
+ (by 長坂吉晃、小張朝子)。
+
+  以後は割と気軽にチャレンジできるようになった
+ (やはりノウハウの蓄積は大きい)。
+
+  1996 年度の桂田ゼミの卒業研究では、
+ADI 法をキーワードに色々な数値実験を行なった
+(爆発問題 --- by 吉澤勇一, 西澤智恵子, 平均曲率流 --- by 平謙一)。
+また円盤領域、
+円環領域などにおける熱伝導方程式に取り組んだ学生 (松本英久) がいた。
+
+  1997 年度以降も説明しておきたい結果があるが、
+それについては、上記 WWW ページを参照してもらいたい。
+
+\section*{これから}
+
+\begin{itemize}
+\item
+  MATLAB 等のソフトウェアでどこまで効率的なプログラムがかけるのか。
+\item
+  von Neumann の安定性解析をきちんと取り扱いたい
+(有名だが、いいかげんな書き方をされていることが多いと感じている…
+多分ちゃんと書けると思う…時間がない…)。
+\item
+  Java によるシミュレーション・プログラムをきちんとした形で提示したい。
+\item
+  円柱領域または球における熱方程式にチャレンジしてみたい。\\
+  (円盤で遭遇した問題がここでも出て来るようだが、
+安定性の問題、解決できるのか？？)
+\item
+  2次元以上の領域でどういうアルゴリズムがお奨めなのか？
+  (1次元ならばθ法でOKだが、2次元だとθ法は損みたい、
+ADI法か？熱方程式ならばそれで良いが移流項が入ったりすると？)
+\end{itemize}
+
+\newif\ifリストたくさん
+
+\chapter{同次 Dirichlet 境界条件以外の境界条件 (1次元)}
+
+(誤植が発見されるのはいつものことであるけれど、
+とてもたくさん見つけてくれた Y.S. 君に感謝する。)
+
+\section{はじめに}
+
+  「発展系の数値解析」では、\underline{同次 Dirichlet 境界条件}を
+課した $1$ 次元熱方程式の初期値境界値問題
+%
+\begin{align*}
+  u_t(x,t)&= u_{xx}(x,t)
+   \quad\mbox{($t>0$, $0<x<1$)} \\
+  u(0,t)&=u(1,t)=0
+   \quad\mbox{($t>0$)} \\
+  u(x,0)&=f(x)
+   \quad\mbox{($0\le x\le 1$)}
+\end{align*}
+%
+に対する差分方程式は提示したが、Neumann 境界条件の場合などについては、
+詳しいことは述べなかった。
+
+  ここでは、
+%
+\begin{enumerate}[(1)]
+\item 同次 Neumann 境界条件
+\item 非同次 Dirichlet 境界条件
+\item 非同次 Neumann 境界条件
+\item 第3種境界条件 (Robin 境界条件)
+\end{enumerate}
+%
+の 4 つの場合の差分方程式について述べる
+((1) はカットというか、(3) に吸収させるのが良いかも)。
+
+\paragraph{卒研で取り組ませてみると:}
+  これらの差分方程式を求めて数値実験させるのは、
+手頃な良い演習と思うのだが、
+事前に注意しておかないと、思いの外手こずる人が多い。
+大抵の場合は、
+きちんとした差分方程式を書き下す前にプログラムの書き直しに取り掛かり、
+行き詰まってしまっている。
+数値計算のプログラミングでは、
+コンピューターの前に座るのに先だって、
+紙の上で差分方程式を完成させるのが鉄則である (この種のことを記述するには、
+数学語が一番であるから)。 --- とは言っても、実際にハマルまでは、
+このことはなかなか分からないものらしい (いつものように)。
+
+\newcommand{\FDMSOL}[2]{U_{#1}^{#2}}
+\newcommand{\EXACTSOL}[2]{u_{#1}^{#2}}
+
+\paragraph{2024〜2025年改善目標}
+
+久しぶりに差分法プログラムを使う必要が生じてこの文書を見返して見たら、
+色々と不行き届きな点が見つかった。
+
+\begin{enumerate}[(1)]
+\item
+  プログラムのうち改訂したものがあるが、それがこの文書には入っていないし、
+探しにくい。
+\item
+  プログラムをコンパイルするのに手間がかかる場合がある。
+\item
+  Cよりは MATLAB, Python という人が増えた。
+そういう言語を使えばより使いやすくなる。
+(C+GLSC という環境は用意するのが大変と感じる人が多いだろうが、
+MATLAB や Python, Julia 等ならばデフォールトの環境で済む。)
+そういうプログラムはすでに世の中に絶対あるはずだと思うが、意外と探しにくい
+(学生がへんてこりんな Python プログラムの載ったレポートを提出して、
+「探さなかったのかな？」と訝しく思ったけれど、自分で探そうとしたら、
+見つけられなかった。)。
+\item
+  新しい文献が出ているが、そういう情報が書いていない。
+\item
+  常識的なことで書いていないことがある。「○○を見よ」位は書いておこう。
+\item
+  自分が分からないことはそのままにしてあるけれど、
+こういうことが分からないと書いておく方が良いかもしれない。
+\item
+  何をしようと考えているのか、
+自分のスタンス (立ち位置) のようなことを書いていないが、
+それは書いておくべきかもしれない。
+\item
+  差分解の公式を書いてみる
+ (\ref{chapter:差分法の安定性と収束性}章「差分法の安定性と収束性」の
+\ref{subsection:二つの解析手法} に書いた理由)。
+\end{enumerate}
+
+できる限り、自分にとって必要なところから手を入れてみるつもり。
+どこまで出来るかは分からない。
+
+\section{数値実験の手引き}
+
+\subsection{参考となるプログラム}
+
+熱方程式の初期値境界値問題を差分法で解くプログラムをいくつか
+\htlink{「公開プログラムのページ」}
+{https://m-katsurada.sakura.ne.jp/program/} で公開している
+\footnote{可視化のために (X11 環境下で利用できる) グラフィックス・ライブラリィ
+\textbf{GLSC}
+(\url{ftp://ftp.st.ryukoku.ac.jp/pub/ryukoku/software/math/})
+を利用しているが、
+明治大学数学科の計算機室 (6701) のコンピューター (Linux, Cygwin, Solaris) や、
+学生貸し出し用のパソコンの多く (Cygwin, Knoppix Math) に
+インストール済みである。}。
+基本的なものは次の二つである。
+
+\begin{description}
+\item[heat1d-i-glsc.c] 
+同次 Dirichlet 境界条件のもとでの熱方程式の初期値境界値問題を
+$\theta$ 法で解くプログラム。
+(\htlink{「発展系の数値解析」}
+{https://m-katsurada.sakura.ne.jp/labo/text/heat-fdm-0.pdf} で説明した、
+差分方程式を解いている。
+菊地・山本 \cite{菊地・山本} に掲載されていたプログラムが元になっている。)
+%
+\item[heat1n-i-glsc.c] 
+  同次 Neumann 境界条件のもとでの熱方程式の初期値境界値問題を
+$\theta$ 法で解くプログラム。
+境界条件の離散化には、
+以下の \ref{sec:非同次ノイマン} で説明する「仮想格子点の方法」を用いている。
+\end{description}
+
+\subsection{実験の方針}
+
+最初はこの二つのプログラムを使って、
+『発展系の数値解析』にある例を再現する方針で実験するのがよいであろう。
+(行列の LU 分解と、それを用いて連立1次方程式を解く方法については、
+\htlink{「『発展系の数値解析』に加えること」}
+{https://m-katsurada.sakura.ne.jp/labo/text/heat-fdm-0-add.pdf} を見よ。
+\texttt{trilu()}, \texttt{trisol()} の理解を後回しにして、
+最初はブラックボックスとして扱うことも出来るであろう。)
+
+それが一段落したら、
+この章の説明を参考に以下のようなプログラムを作成して、
+実験するとよい。
+\begin{enumerate}
+\item
+  非同次 Dirichlet 境界条件のプログラム。
+\ref{sec:非同次ディリクレ} を参考に、
+同次条件の場合の \texttt{heat1d-i-glsc.c} を元にして作る。
+%
+\item
+  非同次 Neumann 境界条件のプログラム (境界条件を「素朴に」近似する方法)。
+\ref{subsec:素朴な方法} を参考に、
+同次 Dirichlet 条件の場合の \texttt{heat1d-i-glsc.c} を元にして作る。
+%
+\item
+  非同次 Neumann 境界条件のプログラム (境界条件を仮想格子点を導入して
+近似する方法)。
+\ref{subsec:仮想格子点の方法} を参考に、
+同次 Neumann 条件の場合の \texttt{heat1n-i-glsc.c} を元にして作る。
+\end{enumerate}
+
+\subsection{計算のチェック}
+
+計算がうまく行っていることの一つのチェック法として、
+解の漸近挙動を見ることがある。
+\begin{enumerate}[(a)]
+\item
+  同次 Dirichlet 境界条件 ($u(0,t)=A$, $u(1,t)=B$) の場合は、
+\[
+ \lim_{t\to\infty} u(x,t)=A+(B-A)x\quad\mbox{($x\in[0,1]$)}
+\]
+が成り立つか？
+\item
+  非同次 Neumann 境界条件 ($u_x(0,t)=A$, $u_x(1,t)=B$)で $A=B$ の場合、
+\[
+ \lim_{t\to\infty}u(x,t)=A x+C\quad\mbox{($x\in[0,1]$)}
+\]
+が成り立つか？ここで $C$ は定数であるが、
+具体的な値を求めることは読者の演習とする。
+%
+\item
+  非同次 Neumann 境界条件で $A\ne B$ の場合、
+\[
+  u(x,t)\sim (B-A)t\quad\mbox{($t\to\infty$)}
+\]
+が成り立っているか？
+%
+\item
+  (余裕がある場合)
+  厳密解が具体的に分かるような、初期条件が単純な場合に計算して、
+誤差を実際に測り、$N$ の増加とともにどのように減衰するか調べる。
+非同次 Neumann 境界条件の場合に、
+境界条件の近似法によって結果がどう変るか詳しく調べる。
+\end{enumerate}
+
+\section{非同次 Dirichlet 境界条件}\label{sec:非同次ディリクレ}
+\label{sec:非同次ディリクレ}
+
+\subsection{問題の設定}
+
+\begin{align}
+u_t(x,t)&=u_{xx}(x,t)
+   \quad\mbox{($t>0$, $0<x<1$)},
+   \label{eq:熱方程式またまた}  \\
+u(0,t)&=A, \quad u(1,t)=B
+   \quad\mbox{($t>0$)},
+   \label{eq:非同次ディリクレ境界条件} \\
+u(x,0)&=f(x)
+   \quad\mbox{($0\le x\le 1$)}
+   \label{eq:初期条件またまた}
+\end{align}
+%
+を考える。ここで $A$, $B$ は $A=B=0$ とは限らない定数である。
+(\ref{eq:非同次ディリクレ境界条件}) を
+\textbf{非同次 Dirichlet 境界条件}と呼ぶ。
+
+「微分方程式2」で、
+この問題の厳密解 $u$ の公式と、その漸近挙動について説明してある。
+
+\subsection{差分方程式}
+
+  熱方程式 (\ref{eq:熱方程式またまた}) から
+%
+\begin{eqnarray}
+\label{eq:熱方程式の近似再び}
+ &&(1+2\theta\lambda)\FDMSOL{i}{n+1}-\theta\lambda(\FDMSOL{i+1}{n+1}+\FDMSOL{i-1}{n+1})
+ =[1-2(1-\theta)\lambda]\FDMSOL{i}{n}+(1-\theta)\lambda(\FDMSOL{i+1}{n}+\FDMSOL{i-1}{n})\\
+ &&\qquad\mbox{($n=0,1,\cdots$; $i=1,2,\cdots,N-1$)}\nonumber
+\end{eqnarray}
+%
+を導き、初期条件 (\ref{eq:初期条件またまた}) から
+%
+\[
+  \FDMSOL{i}{0}=f(x_i) \quad\mbox{($i=0,1,\cdots,N$)}
+\]
+%
+を導くのはこれまでと同じで、
+問題は境界条件 (\ref{eq:非同次ディリクレ境界条件}) をどう扱うかである。
+
+  これは特に難しくはなく、
+%
+\[
+  \FDMSOL{0}{n+1}=A, \quad   \FDMSOL{N}{n+1}=B
+\]
+%
+とするのが自然な扱いである。
+
+  (\ref{eq:熱方程式の近似再び}) で $i=1$ とした式
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{1}{n+1}
+  -\theta\lambda(\FDMSOL{2}{n+1}+\FDMSOL{0}{n+1})
+ =[1-2(1-\theta)\lambda]\FDMSOL{1}{n}
+  +(1-\theta)\lambda(\FDMSOL{2}{n}+\FDMSOL{0}{n})
+%
+\]
+%
+に $\FDMSOL{0}{n+1}=A$ を代入して整理すると
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{1}{n+1}-\theta\lambda \FDMSOL{2}{n+1}
+ =[1-2(1-\theta)\lambda]\FDMSOL{1}{n}+(1-\theta)\lambda(\FDMSOL{2}{n}+\FDMSOL{0}{n})
+  +A\theta\lambda
+\]
+%
+を得る。
+
+  同様に (\ref{eq:熱方程式の近似再び}) で $i=N-1$ とした式
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{N-1}{n+1}-\theta\lambda(\FDMSOL{N}{n+1}+\FDMSOL{N-2}{n+1})
+ =[1-2(1-\theta)\lambda]\FDMSOL{N-1}{n}+(1-\theta)\lambda(\FDMSOL{N}{n}+\FDMSOL{N-2}{n})
+\]
+%
+に $\FDMSOL{N}{n+1}=B$ を代入して整理すると
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{N-1}{n+1}-\theta\lambda \FDMSOL{N-2}{n+1}
+ =[1-2(1-\theta)\lambda]\FDMSOL{N-1}{n}+(1-\theta)\lambda(\FDMSOL{N}{n}+\FDMSOL{N-2}{n})
+  +B\theta\lambda
+\]
+%
+を得る。
+
+  こうして、
+$N-1$ 個の未知数 $\{\FDMSOL{i}{n+1}\}
+_{i=1,2,\cdots,N-1}$ に関する $N-1$ 個の連立 1 次方程式を得る。
+ベクトルと行列を用いて表わすと
+%
+\begin{equation}
+  {\cal A} \bm{U}^{n+1}=\bm{b}^n.
+  \label{eq:１ステップの差分方程式}
+\end{equation}
+%
+ただし
+%
+\[
+{\cal A}=
+\left(
+\begin{array}{ccccccc}
+  1+2\theta\lambda& -\theta\lambda \\
+  -\theta\lambda & 1+2\theta\lambda & -\theta\lambda \\
+     & \ddots & \ddots & \ddots \\
+     &  & -\theta\lambda & 1+2\theta\lambda & -\theta\lambda  \\
+     &  &  & \ddots  & \ddots & \ddots \\
+     &  &  &  & -\theta\lambda & 1+2\theta\lambda& -\theta\lambda \\
+     &  &  &  &  & -\theta\lambda & 1+2\theta\lambda
+\end{array}
+\right),
+\]
+\[
+ \bm{U}^{n+1}=
+\left(
+ \begin{array}{c}
+   \FDMSOL{1}{n+1} \\
+   \FDMSOL{2}{n+1} \\
+   \vdots \\
+   \FDMSOL{i-1}{n+1} \\
+   \FDMSOL{i}{n+1} \\
+   \FDMSOL{i+1}{n+1} \\
+   \vdots \\
+   \FDMSOL{N-2}{n+1} \\
+   \FDMSOL{N-1}{n+1}
+ \end{array}
+\right),
+\]
+\[
+\bm{b}^n=
+\left(
+\begin{array}{ccc}
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{1}{n}
+    &+&(1-\theta)\lambda(\FDMSOL{2}{n}+\FDMSOL{0}{n}) \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{2}{n}
+    &+&(1-\theta)\lambda(\FDMSOL{3}{n}+\FDMSOL{1}{n}) \\
+  \vdots & \vdots & \vdots \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{i}{n}
+    &+&(1-\theta)\lambda(\FDMSOL{i+1}{n}+\FDMSOL{i-1}{n}) \\
+  \vdots & \vdots & \vdots \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{N-2}{n}
+    &+&(1-\theta)\lambda(\FDMSOL{N-1}{n}+\FDMSOL{N-3}{n}) \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{N-1}{n}
+    &+&(1-\theta)\lambda(\FDMSOL{N}{n}+\FDMSOL{N-2}{n})
+\end{array}
+\right)
+\textcolor{red}{
++\left(
+  \begin{array}{c}
+    A\theta\lambda \\
+    0 \\
+    \vdots \\
+    0 \\
+    B\theta\lambda
+  \end{array}
+\right)
+}.
+\]
+
+\paragraph{問}
+  $\dsp\lim_{t\to\infty}u(x,t)=A+(B-A)x$ となることを示せ。
+
+\paragraph{問}
+  (\ref{eq:１ステップの差分方程式}) は、適当な仮定のもとで 
+\[
+ \left[
+  (1+2\theta\lambda)I-\theta\lambda J
+ \right]
+ \Vector{U}^{n+1}
+ =\left\{
+  \left[1-2(1-\theta)\lambda\right]I+(1-\theta)\lambda J
+  \right\}
+ \Vector{U}^{n}
+ +
+  \theta\lambda
+ \begin{pmatrix}
+  A \\ 0 \\ \vdots \\ 0 \\ B
+ \end{pmatrix}
+\]
+と書くことが出来ることを示せ
+(この形が便利なこともある)。
+ただし $I$ は $N-1$ 次の単位行列,
+\[
+  J=\begin{pmatrix}
+     0 & 1 & \\
+     1 & 0 & 1 & \\
+       & 1 & 0 & 1 & \\
+       &   &\ddots&\ddots&\ddots & \\
+       &       &   &  1   & 0 & 1 \\
+       & &      &    &  1   & 0 
+    \end{pmatrix}\in M(N-1;\R).
+\]
+
+\section{非同次 Neumann 境界条件}\label{sec:非同次ノイマン}
+
+\subsection{問題の設定}
+
+\setcounter{equation}{0}
+\begin{align}
+  u_t(x,t) &= u_{xx}(x,t)
+   \quad\mbox{($t>0$, $0<x<1$)}
+   \label{eq:熱方程式再び}  \\
+  u_x(0,t)&=A,\quad u_x(1,t)=B
+   \quad\mbox{($t>0$)} 
+   \label{eq:ノイマン境界条件} \\
+u(x,0)&=f(x)
+   \quad\mbox{($0\le x\le 1$)}.
+   \label{eq:初期条件再び}
+\end{align}
+を考える。ここで $A$, $B$ は ($0$ とは限らない) 定数である。
+%
+
+(\ref{eq:ノイマン境界条件}) を Neumann 境界条件という。
+特に $A=B=0$ の場合、
+(\ref{eq:ノイマン境界条件}) を同次 Neumann 境界条件と呼び、
+厳密解や $t\to\infty$ のときの解の漸近挙動については、
+「微分方程式2 (応用解析 II)」 (桂田 \cite{桂田1}) や「発展系の数値解析」で
+解説済みである。
+
+\medskip
+
+  熱方程式 (\ref{eq:熱方程式再び}) を近似する差分方程式として
+%
+\begin{eqnarray}
+\label{eq:熱方程式の近似}
+ && (1+2\theta\lambda)\FDMSOL{i}{n+1}
+   -\theta\lambda(\FDMSOL{i+1}{n+1}+\FDMSOL{i-1}{n+1})
+ =[1-2(1-\theta)\lambda]\FDMSOL{i}{n}
+  +(1-\theta)\lambda(\FDMSOL{i+1}{n}+\FDMSOL{i-1}{n}) \\
+ && \qquad\mbox{($n=0,1,\cdots$; $i=1,2,\cdots,N-1$)}\nonumber
+\end{eqnarray}
+%
+を導き、初期条件 (\ref{eq:初期条件再び}) から
+%
+\[
+  \FDMSOL{i}{0}=f(x_i) \quad\mbox{($i=0,1,\cdots,N$)}
+\]
+%
+を導くのは、これまでと同じである。
+
+  境界条件 (\ref{eq:ノイマン境界条件}) をどう扱うかが問題である。以下、
+二つの方法を紹介する。一つは素朴で簡単な方法、もう一つは仮想格子点という
+概念を用いた少し凝った (それだけ高精度な近似解を得られる) 方法である。
+
+\subsection{素朴な方法}\label{subsec:素朴な方法}
+
+  $u_x(0,t)$ を前進差分近似し、
+  $u_x(1,t)$ を後退差分近似する、すなわち
+\[
+  u_x(0,t_{n+1})
+  =u_x(x_0,t_{n+1})\kinji \Dfrac{\EXACTSOL{1}{n+1}-\EXACTSOL{0}{n+1}}{h}, \quad
+  u_x(1,t_{n+1})
+  =u_x(x_N,t_{n+1})\kinji \Dfrac{\EXACTSOL{N}{n+1}-\EXACTSOL{N-1}{n+1}}{h}
+\]
+%
+のように近似すると、
+境界条件の方程式 (\ref{eq:ノイマン境界条件}) に対応して
+%
+\begin{equation}
+\label{eq:ノイマン境界条件の素朴な近似}
+  \Dfrac{\FDMSOL{1}{n+1}-\FDMSOL{0}{n+1}}{h}=A, \quad
+  \Dfrac{\FDMSOL{N}{n+1}-\FDMSOL{N-1}{n+1}}{h}=B,
+\end{equation}
+%
+すなわち
+\begin{equation}
+\label{eq:ノイマン境界条件の素朴な近似から得られる方程式}
+  \FDMSOL{0}{n+1}=\FDMSOL{1}{n+1}-A h, \quad
+  \FDMSOL{N}{n+1}=\FDMSOL{N-1}{n+1}+B h
+\end{equation}
+%
+という差分方程式を採用することが考えられる。
+以下、この素朴な方法について説明する。
+
+  ある $n$ について、既に $\{\FDMSOL{i}{n}\}_{i=0,1,\cdots,N}$ が
+分かっているとしたとき、(\ref{eq:熱方程式の近似}),
+(\ref{eq:ノイマン境界条件の素朴な近似から得られる方程式}) は $N+1$ 個の
+未知数 $\{\FDMSOL{i}{n+1}\}_{i=0,1,\cdots,N}$ に対する $N+1$ 個の
+連立1次方程式となっている。
+
+  まず (\ref{eq:ノイマン境界条件の素朴な近似から得られる方程式}) を
+(\ref{eq:熱方程式の近似}) に代入して $\FDMSOL{0}{n+1}$,  $\FDMSOL{N}{n+1}$ を消去
+しよう。
+
+(\ref{eq:熱方程式の近似}) で $i=1$ とした式
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{1}{n+1}
+ -\theta\lambda(\FDMSOL{2}{n+1}+\FDMSOL{0}{n+1})
+ =[1-2(1-\theta)\lambda]\FDMSOL{1}{n}
+ +(1-\theta)\lambda(\FDMSOL{2}{n}+\FDMSOL{0}{n})
+\]
+%
+に $\FDMSOL{0}{n+1}=\FDMSOL{1}{n+1}-A h$ を代入して、
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{1}{n+1}
+  -\theta\lambda(\FDMSOL{2}{n+1}+\FDMSOL{1}{n+1}-A h)
+ =[1-2(1-\theta)\lambda]\FDMSOL{1}{n}+(1-\theta)\lambda(\FDMSOL{2}{n}+\FDMSOL{0}{n}),
+\]
+%
+すなわち
+%
+\[
+ (1+\theta\lambda)\FDMSOL{1}{n+1}-\theta\lambda \FDMSOL{2}{n+1}
+ =[1-2(1-\theta)\lambda]
+  \FDMSOL{1}{n}+(1-\theta)\lambda(\FDMSOL{2}{n}+\FDMSOL{0}{n})
+  -A\theta\lambda h.
+\]
+
+  同様に (\ref{eq:熱方程式の近似}) で $i=N-1$ とした式
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{N-1}{n+1}-\theta\lambda(\FDMSOL{N}{n+1}+\FDMSOL{N-2}{n+1})
+ =[1-2(1-\theta)\lambda]\FDMSOL{N-1}{n}+(1-\theta)\lambda(\FDMSOL{N}{n}+\FDMSOL{N-2}{n})
+\]
+%
+に $\FDMSOL{N}{n+1}=\FDMSOL{N-1}{n+1}+B h$ を代入して、
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{N-1}{n+1}
+  -\theta\lambda(\FDMSOL{N-1}{n+1}+B h+\FDMSOL{N-2}{n+1})
+ =[1-2(1-\theta)\lambda]\FDMSOL{N-1}{n}+(1-\theta)\lambda(\FDMSOL{N}{n}+\FDMSOL{N-2}{n}),
+\]
+%
+すなわち
+%
+\[
+ (1+\theta\lambda)\FDMSOL{N-1}{n+1}-\theta\lambda \FDMSOL{N-2}{n+1}
+ =[1-2(1-\theta)\lambda]\FDMSOL{N-1}{n}+(1-\theta)\lambda
+  (\FDMSOL{N}{n}+\FDMSOL{N-2}{n})+B\theta\lambda h.
+\]
+
+  こうして、$N-1$ 個の未知数 $\{\FDMSOL{i}{n+1}\}_{i=1,2,\cdots,N-1}$ に関す
+る $N-1$ 個の連立 1 次方程式を得る。
+ベクトルと行列を用いて表わすと
+%
+\[
+  {\cal A}\bm{U}^{n+1}=\bm{b}^n.
+\]
+%
+ただし
+%
+\begin{equation}
+{\cal A}=
+\left(
+\begin{array}{ccccccc}
+  \mbox{\textcolor{red}{$1+\theta\lambda$}}& -\theta\lambda \\
+  -\theta\lambda & 1+2\theta\lambda & -\theta\lambda \\
+     & \ddots & \ddots & \ddots \\
+     &  & -\theta\lambda & 1+2\theta\lambda & -\theta\lambda  \\
+     &  &  & \ddots  & \ddots & \ddots \\
+     &  &  &  & -\theta\lambda & 1+2\theta\lambda& -\theta\lambda \\
+     &  &  &  &  & -\theta\lambda & \mbox{\textcolor{red}{$1+\theta\lambda$}}
+\end{array}
+\right),
+\end{equation}
+\begin{equation}
+ \bm{U}^{n+1}=
+\left(
+ \begin{array}{c}
+   \FDMSOL{1}{n+1} \\
+   \FDMSOL{2}{n+1} \\
+   \vdots \\
+   \FDMSOL{i-1}{n+1} \\
+   \FDMSOL{i}{n+1} \\
+   \FDMSOL{i+1}{n+1} \\
+   \vdots \\
+   \FDMSOL{N-2}{n+1} \\
+   \FDMSOL{N-1}{n+1}
+ \end{array}
+ \right),
+\end{equation}
+%
+\begin{equation}
+\bm{b}^n=
+\left(
+\begin{array}{ccc}
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{1}{n}
+     &+&(1-\theta)\lambda(\FDMSOL{2}{n}+\FDMSOL{0}{n}) \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{2}{n}
+     &+&(1-\theta)\lambda(\FDMSOL{3}{n}+\FDMSOL{1}{n}) \\
+  \vdots & \vdots & \vdots \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{i}{n}
+     &+&(1-\theta)\lambda(\FDMSOL{i+1}{n}+\FDMSOL{i-1}{n}) \\
+  \vdots & \vdots & \vdots \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{N-2}{n}
+     &+&(1-\theta)\lambda(\FDMSOL{N-1}{n}+\FDMSOL{N-3}{n}) \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{N-1}{n}
+     &+&(1-\theta)\lambda(\FDMSOL{N}{n}+\FDMSOL{N-2}{n})
+\end{array}
+\right)
+\textcolor{red}{
++\left(
+ \begin{array}{c}
+  -A\theta\lambda h \\
+   0 \\
+  \vdots\\
+   0 \\
+   B\theta\lambda h
+ \end{array}
+ \right)
+}.
+\end{equation}
+%
+(${\cal A}$ の対角成分がすべて同じではないことに注意しよう。
+同次 Dirichlet 境界条件の場合とは異なる行列である。)
+
+この連立1次方程式が一意可解であることは、
+同次 Dirichlet 境界条件の場合と同様に証明できる。
+要するに係数行列が行について狭義優対角であることを示せばよいが、
+それは簡単である。
+
+  なお、念のために述べておくと、
+$\FDMSOL{0}{n+1}$, $\FDMSOL{N}{n+1}$ については、
+上の連立1次方程式を解いて $\FDMSOL{1}{n+1}$,
+$\FDMSOL{N-1}{n+1}$ を求めてから、
+%
+\begin{equation}
+  \FDMSOL{0}{n+1}=\FDMSOL{1}{n+1}-A h, \quad
+  \FDMSOL{N}{n+1}=\FDMSOL{N-1}{n+1}+B h
+ \tag{再掲 \ref{eq:ノイマン境界条件の素朴な近似から得られる方程式}}
+\end{equation}
+%
+で計算すればよい。
+
+\subsection{仮想格子点を用いる方法}\label{subsec:仮想格子点の方法}
+
+  前進差分近似
+%
+\[
+  f'(x)\kinji\frac{f(x+h)-f(x)}{h}
+  \qquad\mbox{(誤差は $O(h)$)}
+\]
+%
+や後退差分近似
+%
+\[
+  f'(x)\kinji\frac{f(x)-f(x-h)}{h}
+  \qquad\mbox{(誤差は $O(h)$)}
+\]
+%
+よりも 1 階中心差分近似
+%
+\[
+  f'(x)\kinji\frac{f(x+h)-f(x-h)}{2h}
+  \qquad\mbox{(誤差は $O(h^2)$)}
+\]
+%
+の方が近似のオーダーが高いのであった。これを利用するために、
+%
+\[
+  x_{-1}=-h, \quad x_{N+1}=(N+1)h=1+h
+\]
+%
+という $x$ 座標を持つ「\textbf{仮想格子点}」 $(x_{-1},t_{n+1})$,
+$(x_{N+1},t_{n+1})$ を導入して (もちろん、
+その点における $u$ の値 $\EXACTSOL{-1}{n+1}$,
+$\EXACTSOL{N+1}{n+1}$ を考える --- 本当は、
+仮想格子点は $u$ の定義域の外なのだが --- だから「仮想」と言うわけ)、
+  $u_x(0,t)$, $u_x(1,t)$ を共に 1 階中心差分近似する、すなわち
+%
+\[
+  u_x(0,t_{n+1})=  u_x(x_0,t_{n+1})
+ \kinji \Dfrac{\EXACTSOL{1}{n+1}-\EXACTSOL{-1}{n+1}}{2h}, \quad
+  u_x(1,t_{n+1})= u_x(x_N,t_{n+1})
+ \kinji \Dfrac{\EXACTSOL{N+1}{n+1}-\EXACTSOL{N-1}{n+1}}{2h}
+\]
+%
+のように近似すると、境界条件 (\ref{eq:ノイマン境界条件}) から
+$\FDMSOL{i}{n}$ に関する方程式として
+%
+\begin{equation}
+\label{eq:ノイマン境界条件の中心差分近似}
+  \Dfrac{\FDMSOL{1}{n+1}-\FDMSOL{-1}{n+1}}{2h}=A, \quad
+  \Dfrac{\FDMSOL{N+1}{n+1}-\FDMSOL{N-1}{n+1}}{2h}=B,
+\end{equation}
+%
+すなわち
+%
+\begin{equation}
+\label{eq:ノイマン境界条件の中心差分近似から得られる式}
+  \FDMSOL{-1}{n+1}=\FDMSOL{1}{n+1}-2 A h, \quad
+  \FDMSOL{N+1}{n+1}=\FDMSOL{N-1}{n+1}+2 B h
+\end{equation}
+%
+を採用することが考えられる。この節ではこの近似法について考察する。
+
+  ある $n$ について、既に $\{\FDMSOL{i}{n}\}_{i=0,1,\cdots,N}$ が分かってい
+るとしたとき、(\ref{eq:熱方程式の近似}), 
+(\ref{eq:ノイマン境界条件の中心差分近似から得られる式})は $N+3$ 個の未知数 
+$\{\FDMSOL{i}{n+1}\}_{i=-1,0,1,\cdots,N,N+1}$ に対する $N+1$ 個の連立1次方程
+式となっている。このままでは、方程式が$2$ 個不足するが、それを補うため、
+(\ref{eq:熱方程式の近似}) が $i=0$, $N$ についても成立していると仮定す
+る。すると、未知数の個数と方程式の個数がともに $N+3$ になってつりあう。
+
+  まず (\ref{eq:ノイマン境界条件の中心差分近似から得られる式}) を
+(\ref{eq:熱方程式の近似}) に代入して $\FDMSOL{-1}{n+1}$,  $\FDMSOL{N+1}{n+1}$ を消去
+しよう。
+
+  (\ref{eq:熱方程式の近似}) に $i=0$ を代入した式
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{0}{n+1}-\theta\lambda(\FDMSOL{1}{n+1}+\FDMSOL{-1}{n+1})
+ =[1-2(1-\theta)\lambda]\FDMSOL{0}{n}+(1-\theta)\lambda(\FDMSOL{1}{n}+\FDMSOL{-1}{n})
+\]
+%
+に $\FDMSOL{-1}{n+1}=\FDMSOL{1}{n+1}-2 A h$ (と $\FDMSOL{-1}{n}
+=\FDMSOL{1}{n}-2 A h$) を代入して、
+%
+\[
+  (1+2\theta\lambda)\FDMSOL{0}{n+1}
+  -\theta\lambda(\FDMSOL{1}{n+1}+\FDMSOL{1}{n+1}-2 A h)
+ =[1-2(1-\theta)\lambda]\FDMSOL{0}{n}
+  +(1-\theta)\lambda(\FDMSOL{1}{n}+\FDMSOL{1}{n}-2 A h),
+\]
+%
+すなわち
+\[
+ (1+2\theta\lambda)\FDMSOL{0}{n+1}-2\theta\lambda \FDMSOL{1}{n+1}
+ =[1-2(1-\theta)\lambda]\FDMSOL{0}{n}+2(1-\theta)\lambda \FDMSOL{1}{n}
+  -2A\lambda h.
+\]
+
+  同様に (\ref{eq:熱方程式の近似}) に $i=N$ を代入した式
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{N}{n+1}
+ -\theta\lambda(\FDMSOL{N+1}{n+1}+\FDMSOL{N-1}{n+1})
+ =[1-2(1-\theta)\lambda]\FDMSOL{N}{n}
+  +(1-\theta)\lambda(\FDMSOL{N+1}{n}+\FDMSOL{N-1}{n})
+\]
+%
+に $\FDMSOL{N+1}{n+1}=\FDMSOL{N-1}{n+1}+2 B h$ (と $\FDMSOL{N+1}{n}
+=\FDMSOL{N-1}{n}+2 B h$) を代入して、
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{N}{n+1}
+ -\theta\lambda(\FDMSOL{N-1}{n+1}+2 B h+\FDMSOL{N-1}{n+1})
+ =[1-2(1-\theta)\lambda]\FDMSOL{N}{n}
+ +(1-\theta)\lambda(\FDMSOL{N-1}{n}+2 B h+\FDMSOL{N-1}{n}),
+\]
+%
+すなわち
+%
+\[
+ (1+2\theta\lambda)\FDMSOL{N}{n+1}-2\theta\lambda \FDMSOL{N-1}{n+1}
+ =[1-2(1-\theta)\lambda]\FDMSOL{N}{n}+2(1-\theta)\lambda \FDMSOL{N-1}{n}
+  +2 B\lambda h.
+\]
+
+  こうして、$N+1$ 個の未知数 $\{\FDMSOL{i}{n+1}\}_{i=0,1,2,\cdots,N}$ に
+関する $N+1$ 個の連立 1 次方程式を得る。
+ベクトルと行列を用いて表わすと
+%
+\[
+  {\cal A}\bm{U}^{n+1}=\bm{b}^n.
+\]
+%
+ただし
+%
+\begin{equation}
+{\cal A}=
+\left(
+\begin{array}{ccccccc}
+  1+2\theta\lambda& \mbox{\textcolor{red}{$-2\theta\lambda$}} \\
+  -\theta\lambda & 1+2\theta\lambda & -\theta\lambda \\
+     & \ddots & \ddots & \ddots \\
+     &  & -\theta\lambda & 1+2\theta\lambda & -\theta\lambda  \\
+     &  &  & \ddots  & \ddots & \ddots \\
+     &  &  &  & -\theta\lambda & 1+2\theta\lambda& -\theta\lambda \\
+     &  &  &  &  & \mbox{\textcolor{red}{$-2\theta\lambda$}} & 1+2\theta\lambda
+\end{array}
+\right),
+\end{equation}
+\begin{equation}
+ \bm{U}^{n+1}=
+\left(
+ \begin{array}{c}
+   \FDMSOL{0}{n+1} \\
+   \FDMSOL{1}{n+1} \\
+   \FDMSOL{2}{n+1} \\
+   \vdots \\
+   \FDMSOL{i-1}{n+1} \\
+   \FDMSOL{i}{n+1} \\
+   \FDMSOL{i+1}{n+1} \\
+   \vdots \\
+   \FDMSOL{N-2}{n+1} \\
+   \FDMSOL{N-1}{n+1} \\
+   \FDMSOL{N}{n+1}
+ \end{array}
+\right),
+\end{equation}
+\begin{equation}
+\bm{b}^n=
+\left(
+\begin{array}{ccc}
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{0}{n}&+&
+    \textcolor{red}{2(1-\theta)\lambda \FDMSOL{1}{n}}\\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{1}{n}
+     &+&(1-\theta)\lambda(\FDMSOL{2}{n}+\FDMSOL{0}{n})
+\\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{2}{n}
+     &+&(1-\theta)\lambda(\FDMSOL{3}{n}+\FDMSOL{1}{n})
+\\
+ \vdots & \vdots & \vdots \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{i}{n}
+     &+&(1-\theta)\lambda(\FDMSOL{i+1}{n}+\FDMSOL{i-1}{n}) \\
+ \vdots & \vdots & \vdots \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{N-2}{n}
+     &+&(1-\theta)\lambda(\FDMSOL{N-1}{n}+\FDMSOL{N-3}{n}) \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{N-1}{n}
+     &+&(1-\theta)\lambda(\FDMSOL{N}{n}+\FDMSOL{N-2}{n}) \\
+  \left[1-2(1-\theta)\lambda\right]\FDMSOL{N}{n}&+&
+   \textcolor{red}{2(1-\theta)\lambda \FDMSOL{N-1}{n}}
+\end{array}
+\right)
+\textcolor{red}{
+ +
+ \left(
+  \begin{array}{c}
+   -2 A\lambda h\\
+   0\\
+   \vdots\\
+   0\\
+   2 B\lambda h
+  \end{array}
+ \right)
+}.
+\end{equation}
+
+\begin{jremark}[対称な係数行列が欲しい場合]\upshape
+  実際に数値計算する場合、連立1次方程式の係数行列は対称 (実対称 or
+ Hermite) であることが望ましい。
+上に現われる ${\cal A}$ は対称ではないが、第 $0$, $N$ 行を $1/2$ 倍
+すると対称にすることができる (連立1次方程式については、$b$ の第 $0$, 
+$N$ 成分も $1/2$ 倍にすればよい)。 --- このように
+何も考えないで差分近似すると非対称な差分方程式が得られるが、
+少し工夫すると対称にできることは良くある。 \qed
+\end{jremark}
+
+\subsection{二つの方法の比較}
+
+  何回か卒研で取り組んでもらったのだが、最後までやってもらえなくて…
+$\lambda=\tau/h^2$ を安定性の条件を満たすように小さく固定して、$N$ を大
+きくした場合、ある固定した $(x,t)$ における精度を調べると、$O(N^{-1})$,
+$O(N^{-2})$ となる。ところで、実際に実験してみると、
+二つの方法の差は\underline{非同次}境界条件の場合に
+特に著しくなる (逆に言うと、
+同次境界条件の場合にはあまり差が出ない --- これは結構はっきりとした
+差が出て、面白い結果だと思うのだが、
+まとめてもらえてなくて残念だなぁ)。
+
+\subsection{総熱量のチェック}
+
+あるとき、上で説明した境界条件の近似について疑いを持ったため、
+総熱量
+\[
+ J(t):=\int_0^1 u(x,t)\;\Dx
+\]
+に相当するものを計算してチェックしてみよう、と考えた。
+
+\[
+ J'(t)
+  =\int_0^1 \frac{\rd u}{\rd t}(x,t)\;\D x
+  =\int_0^1 \frac{\rd^2 u}{\rd x^2}(x,t)\;\D x
+  =\left[u_x(x,t)\right]_{x=0}^{x=1}
+  =u_x(1,t)-u_x(0,t)=\beta-\alpha
+\]
+であるから
+\[
+  J(t)=J(0)+(\beta-\alpha)t
+\]
+となるはずである。
+
+$J(t_n)$ に相当する量として、台形則による近似
+\[
+  E^n:=h\left(\frac{1}{2}U_0^n+\sum_{i=1}^{N-1}U_i^n+\frac{1}{2}U_{N}^n\right)
+\]
+を採用してみよう。
+
+$\theta$ 法の差分方程式
+\begin{subequations} % 2024-07-21 14:28の式群
+\begin{align}
+ &(1+2\theta\lambda)U^{n+1}_0
+ -2\theta\lambda U^{n+1}_1
+ =[1-2(1-\theta)\lambda]U^n_0+2(1-\theta)\lambda U^n_1-2\alpha\lambda h,\\
+ &(1+2\theta\lambda)U^{n+1}_N
+ -2\theta\lambda U^{n+1}_{N-1}
+ =[1-2(1-\theta)\lambda]U^n_N+2(1-\theta)\lambda U^n_{N-1}+2\beta\lambda h,\\
+ & (1+2\theta\lambda)U^{n+1}_i
+   -\theta\lambda\left(U_{i+1}^{n+1}+U_{i-1}^{n+1}\right)
+ =[1-2(1-\theta)\lambda]U^n_i+(1-\theta)\lambda(U^n_{i+1}+U^n_{i-1})\\
+ &\quad\quad\text{($1\le i\le N-1$)}\notag
+\end{align}
+\end{subequations}
+について、
+第1式$\times\frac{1}{2}$, 第2式$\times\frac{1}{2}$, 
+それから $1\le i\le N-1$ を満たす $i$ についての第3の式を加えると
+\begin{align*}
+ &(1-2\theta\lambda)
+ \left(
+   \frac{1}{2}U^{n+1}_0+\sum_{i=1}^{N-1}U^{n+1}_i+\frac{1}{2}U^{n+1}_N
+ \right)
+ -\theta\lambda
+  \left(
+    U_1^{n+1}+U_{N-1}^{n+1}+\sum_{i=2}^{N}U^{n+1}_i+\sum_{i=0}^{N-2}U^{n+1}_i
+  \right)\\
+ &=\left[1-2(1-\theta)\lambda\right]
+  \left(
+    \frac{1}{2}U^n_0+\sum_{i=1}^{N-1}U^n_i+\frac{1}{2}U^n_{N}
+  \right)
+  +(1-\theta)\lambda
+   \left(
+    U_1^n+U_{N-1}^n+\sum_{i=2}^N U_i^n+\sum_{i=0}^{N-2}U_i^n
+   \right)\\
+  &\quad+(\beta-\alpha)\lambda h
+\end{align*}
+
+\subsection{Neumann 境界条件の場合の解析解の導出}
+\label{subsec:解析解の導出}
+
+以下、Neumann 境界条件の場合の解析解の求め方について述べる。
+$A=B$ ならば、定常解が存在するので、
+それを熱方程式と境界条件を満す特解として用いて、
+同次 Neumann 境界値問題に帰着できる (これは簡単である)。
+
+  そこで、$A\ne B$ の場合を説明しよう。
+最初に考えるのは $A=B$ の場合と同じであり、特解を探してみる。ところが、
+%
+\begin{eqnarray*}
+ 0&=& v''(x),\\
+ v'(0)&=& A, \quad v'(1) = B
+\end{eqnarray*}
+%
+を満たす $v$ は存在しない。
+
+  そこで、とりあえず (しかたなく) 境界条件
+\[
+  v'(0)= A, \quad v'(1) = B
+\]
+のみを満たす $v$ を適当に一つ取る。それから $w(x,t)=u(x,t)-v(x)$ とお
+くと、$w$ は
+\begin{align*}
+w_t(x,t) &= w_{xx}(x,t)+v''(x) \quad\mbox{($x\in (0,1)$, $t\in (0,\infty)$)}\\
+w_x(0,t)&= w_x(1,t)=0\quad\mbox{($t\in (0,\infty)$)}\\
+w(x,0)&=f(x)-v(x)\quad\mbox{($x\in [0,1]$)}
+\end{align*}
+を満たす。
+
+  $v$ が定常解ではないので、微分方程式が熱方程式ではなくなってしまった
+が (もっとも、$v''$ は簡単なものにできる)、境界条件は同次境界条件になっ
+た。
+
+  さて、ここからやり方は色々考えられる。
+%
+\begin{enumerate}
+\item
+  このような非同次熱方程式の初期値境界値問題に対する
+(Green 関数というものを用いる) 解の公式がある
+(「微分方程式2 (旧 応用解析 II)」のノートで
+説明しておいた --- それは本質的には、次のやり方と同等である)。
+%
+\item
+  割と一般的に使える方法として、
+固有関数展開法\footnote{Galerkin 法という人もいる。
+古典的な Galerkin 法は、
+固有関数を基底関数に用いて、
+弱形式により未定係数を決定するというものであり、
+このうちの「固有関数を基底関数に」、「未定係数を決定」に注目して
+Galerkin 法と言っているのであろう。
+しかし有限要素法の話をしているとき、
+「有限要素法は近似関数に区分多項式を用いた Galerkin 法である」
+と言うことが多いので、
+個人的にはあまりしっくり来ない。}というのがある。
+それは、
+%
+\[
+  w(x,t)=\frac{a_0(t)}{2}+\sum_{n=1}^\infty a_n(t)\cos n\pi x
+\]
+%
+というように、固有関数 $\cos n\pi x$ で解 $w$ が展開出来ると仮定して、
+これを方程式に代入して $a_n(t)$ についての方程式を導き、それを解く、と
+いうものである。
+%
+\item
+  今の問題の場合、$v$ として簡単な 2 次関数が取れるので、$v''$ は定数
+になって簡単である。そこで、$w$ についての問題の特解は困難なく発見できる。
+もっとも、定常解は存在しないだろうから、今度は見方を買えて、
+$V=V(t)$ と、$t$ だけに依存する特解を探してみる。すると… (以下、各自
+やってみること)
+\end{enumerate}
+
+  たまたまという感じは強いが、とりあえずこの問題を解くだけならば第 3 の
+方法が簡単である。結果だけ書いておくと、
+%
+\[
+ u(x,t)=(B-A)t+\frac{B-A}{2}x^2+A x+\frac{a_0}{2}
+        +\sum_{n=1}^\infty a_n e^{-n^2\pi^2 t}\cos n\pi x,
+\]
+\[
+ a_n=2\int_0^1 \left[f(x)-\left(\frac{B-A}{2}x^2+A x\right)\right]
+  \cos n\pi x\,\Dx\quad\mbox{($n=0,1,\cdots$)}.
+\]
+
+\begin{itembox}[l]{途中経過}\small
+  $v$ として
+\[
+ v(x)=\frac{B-A}{2}x^2+A x
+\]
+%
+を取ると、$v''(x)\equiv B-A$ となるので、
+%
+\[
+ w_t=w_{xx}+B-A.
+\]
+%
+そこで $V(t):=(B-A)t$ と選び、$W(x,t):= w(x,t)-V(t)$ とおくと、
+%
+\begin{eqnarray*}
+  W_t(x,t)&=& W_{xx}(x,t)\quad\mbox{($(x,t)\in (0,1)\times (0,\infty)$)},\\
+  W_x(0,t)&=& W_x(1,t)=0\quad\mbox{($t\in(0,\infty)$)},\\
+  W(x,0)&=& f(x)-v(x)\quad\mbox{($x\in [0,1]$)}.
+\end{eqnarray*}
+%
+これは同次 Neumann 問題であるから、$W$ は次のように求まる。
+%
+\[
+ W(x,t)=\frac{a_0}{2}+\sum_{n=1}^\infty a_n e^{-n^2\pi^2 t}\cos n\pi x,
+  \quad
+  a_n=2\int_0^1 (f(x)-v(x))\cos n\pi x\,\Dx.
+\]
+  ゆえに
+%
+\begin{eqnarray*}
+ u(x,t)&=&w(x,t)+v(x)=W(x,t)+V(t)+v(x)\\
+  &=&\frac{B-A}{2}x^2+A x+(B-A)t+\frac{a_0}{2}
+  +\sum_{n=1}^\infty a_ne^{-n^2\pi^2 t}\cos n\pi x. \qed
+\end{eqnarray*}
+\end{itembox}
+
+なお、固有関数展開法ついては、(あちこちに載っているが) 例えば
+スタンリー・ファーロウ \cite{Farlow}に入門的な記述がある。
+最近は「見直された」のか、
+説明が載っている本が増えたので、自力で少し探索してみることを勧める。
+
+\paragraph{問}
+  $A=B$ のとき、$\dsp\lim_{t\to\infty}u(x,t)$ を求めよ。
+
+\section{色々な境界条件を扱えるプログラムの作成}
+
+(久しぶりにこの章に書き足す。
+まだ書き足りない。厳密解の導出とか。)
+
+\subsection{Robin の条件}
+
+  例えば、境界において外界への熱の「放散」が起っているとき、
+数学的にはいわゆる\textbf{第三種境界条件}
+\index{だいさんしゅきょうかいじょうけん@第三種境界条件}
+(\textbf{Robin の境界条件}
+\index{ろばんのきょうかいじょうけん@Robinの境界条件},
+\textbf{Newton の境界条件}\index{にゅーとんのきょうかいじょうけん@Newtonの境界条件})
+\begin{equation}
+  \frac{\rd u}{\rd n}+h u=T
+\end{equation}
+となる。ここで $h$ は既知の物理的定数 (正の定数)、
+$T$ は物理的定数と周囲の温度で定まる既知量 (関数となりうる) である。
+
+\begin{itembox}{\textbf{Newton の冷却の法則}}
+  物体の表面上の点 $x_0$ から、温度 $U$ の外界へ熱の放散が起っているとき、
+その放散量は温度差 $u(x_0,t)-U$ に比例する。特に
+\[
+  \frac{\rd u}{\rd n}(x_0,t)=\sigma (u(x_0,t)-U)
+  \quad\mbox{($\sigma$ は正の定数)}
+\]
+が成り立つ。
+\end{itembox}
+
+  ここでは $\gamma$, $T_0$, $T_1$ を既知定数として、
+\begin{eqnarray*}
+  -\frac{\rd u}{\rd x}(0,t)+\gamma u(0,t)&=&T_0,\\
+   \frac{\rd u}{\rd x}(1,t)+\gamma u(1,t)&=&T_1
+\end{eqnarray*}
+%
+という境界条件を考えることにする。
+仮想格子点を導入して、中心差分近似することで、それぞれ
+%
+\begin{align*}
+ &\frac{U^{m}_{-1}-U^{m}_1}{2h}+\gamma U^{m}_0=T_0,\\
+ &\frac{U^{m}_{N+1}-U^{m}_{N-1}}{2h}+\gamma U^{m}_N=T_1
+\end{align*}
+という差分方程式を得る。これから
+\begin{eqnarray}
+  U^{m}_{-1}&=&U^{m}_1+2h(T_0-\gamma U^{m}_0),
+   \label{eq:仮想格子点での値0}\\
+  U^{m}_{N+1}&=&U^{m}_{N-1}+2h(T_1-\gamma U^{m}_N).
+   \label{eq:仮想格子点での値1}
+\end{eqnarray}
+
+さて、
+熱方程式を差分近似して得られる差分方程式 (\ref{eq:熱方程式の近似}) が $i
+=0$ でも成り立つとして
+%
+\[
+ (1+2\theta\lambda)U^{n+1}_0-\theta\lambda(U^{n+1}_1+U^{n+1}_{-1})
+ =\left[1-2(1-\theta)\lambda\right]U^n_0
+  +(1-\theta)\lambda(U^{n}_1+U^{n}_{-1}).
+\]
+ここで $m=n,n+1$ の場合の (\ref{eq:仮想格子点での値0}) を代入すると、
+\[
+ \left[1+2\theta\lambda\right]U^{n+1}_0-2\theta\lambda U^{n+1}_1
+  -2\theta\lambda h(T_0-\gamma U^{n+1}_0)
+ =\left[1-2(1-\theta)\lambda\right]U^n_0
+  +2(1-\theta)\lambda U^n_1+2(1-\theta)\lambda h(T_0-\gamma U^n_0).
+\]
+  整理すると
+\[
+ \left[1+2\theta\lambda(1+\gamma h)\right]U^{n+1}_0-2\theta\lambda U^{n+1}_1
+ =\left[1-2(1-\theta)\lambda(1+\gamma h)\right]U^n_0
+  +2(1-\theta)\lambda U^n_1+2\lambda h T_0.
+\]
+
+同様にして
+熱方程式を差分近似して得られる差分方程式が $i=N$ で成り立つとした式に、
+$m=n,n+1$ の場合の (\ref{eq:仮想格子点での値1}) を代入して整理すると、
+\[
+  \left[1+2\theta\lambda(1+\gamma h)\right]U^{n+1}_N
+ -2\theta\lambda U^{n+1}_{N-1}
+ =\left[1-2(1-\theta)\lambda(1+\gamma h)\right]U^n_{N}
+  +2(1-\theta)\lambda U^n_{N-1}+2\lambda h T_1.
+\]
+
+これから
+\[
+  A\Vector{U}^{n+1}=\Vector{b}^n
+\]
+となる。ただし、
+\begin{eqnarray*}
+ A&=&
+ \left(
+ \begin{array}{cccccc}
+  1+2\theta\lambda(1+\gamma h) & -2\theta\lambda\\
+    -\theta\lambda &   1+2\theta\lambda & -\theta\lambda \\
+                   & \ddots & \ddots & \ddots \\
+             &        & -\theta\lambda & 1+2\theta\lambda & -\theta\lambda \\
+        &    &     & -2\theta\lambda & 1+2\theta\lambda(1+\gamma h)
+ \end{array}
+ \right),\\
+ \Vector{U}^{n+1}&=&\left(U^{n+1}_0,\cdots,U^{n+1}_N\right)^T,\\
+ \Vector{b}^n&=&
+ \left(
+ \begin{array}{c}
+  \left[1-2(1-\theta)\lambda(1+\gamma h)\right]U^n_0
+  +2(1-\theta)\lambda U^n_1\\
+  \left[1-2(1-\theta)\lambda\right]U^n_1+(1-\theta)\lambda(U^n_2+U^n_0) \\
+  \vdots\\
+  \left[1-2(1-\theta)\lambda\right]U^n_i
+  +(1-\theta)\lambda(U^n_{i+1}+U^n_{i-1}) \\
+  \vdots\\
+  \left[1-2(1-\theta)\lambda\right]U^n_{N-1}
+  +(1-\theta)\lambda(U^n_{N}+U^n_{N-2}) \\
+  \left[1-2(1-\theta)\lambda(1+\gamma h)\right]U^n_N
+  +2(1-\theta)\lambda U^n_{N-1}
+ \end{array}
+ \right)
+ +
+ \left(
+ \begin{array}{c}
+  2\lambda h T_0 \\
+   0\\
+   \vdots\\
+   0\\
+  2\lambda h T_1
+ \end{array}
+ \right).
+\end{eqnarray*}
+
+なお、$\theta=1$ と選んだ場合、
+$A$ と $\Vector{b}^n$ は特に簡単になる。
+参考まで、ここに掲げておく。
+\begin{eqnarray*}
+ A&=&
+ \left(
+ \begin{array}{cccccc}
+  1+2\lambda(1+\gamma h) & -2\lambda\\
+    -\lambda &   1+2\lambda & -\lambda \\
+                   & \ddots & \ddots & \ddots \\
+             &        & -\lambda & 1+2\lambda & -\lambda \\
+        &    &     & -2\lambda & 1+2\lambda(1+\gamma h)
+ \end{array}
+ \right),\\
+ \Vector{b}^n&=&
+ \left(
+ \begin{array}{c}
+  U^n_0\\
+  \vdots\\
+  U^n_i \\
+  \vdots\\
+  U^n_N
+ \end{array}
+ \right)
+ +
+ \left(
+ \begin{array}{c}
+  2\lambda h T_0 \\
+   0\\
+   \vdots\\
+   0\\
+  2\lambda h T_1
+ \end{array}
+ \right).
+\end{eqnarray*}
+
+\subsection{「万能」プログラム}
+
+  Robin の境界条件という場合 $\gamma>0$ なのだが、
+形式的に $\gamma=0$ とおくといわゆる Neumann 境界条件になるので、
+無理なく一つのプログラムを使うことができる。
+
+  そこで Robin の条件に代えて、Dirichlet 境界条件
+\[
+  u(0,t)=\alpha,\quad u(1,t)=\beta
+\]
+も考えてみよう。
+この場合は $A$, $\Vector{b}^n$ を次の $\wt A$,
+$\wt{\Vector{b}}^{n}$ に変えればよい\footnote{少々強引ではある。
+この場合の連立1次方程式は、
+係数行列を簡単に対称化することは出来ないようであるし。
+遊戯かもしれない。}。
+\begin{eqnarray*}
+ \wt A&=&
+ \left(
+ \begin{array}{cccccc}
+  1 & 0 \\
+    -\theta\lambda &   1+2\theta\lambda & -\theta\lambda \\
+                   & \ddots & \ddots & \ddots \\
+             &        & -\theta\lambda & 1+2\theta\lambda & -\theta\lambda \\
+        &    &     & 0 & 1
+ \end{array}
+ \right),\\
+ \wt{\Vector{b}}^n&=&
+ \left(
+ \begin{array}{c}
+  \alpha \\
+  \left[1-2(1-\theta)\lambda\right]U^n_1+(1-\theta)\lambda(U^n_2+U^n_0) \\
+  \vdots\\
+  \left[1-2(1-\theta)\lambda\right]U^n_i
+  +(1-\theta)\lambda(U^n_{i+1}+U^n_{i-1}) \\
+  \vdots\\
+  \left[1-2(1-\theta)\lambda\right]U^n_{N-1}
+  +(1-\theta)\lambda(U^n_{N}+U^n_{N-2}) \\
+  \beta
+ \end{array}
+ \right).
+\end{eqnarray*}
+
+  $A$ と $\wt A$,
+${\Vector{b}}^n$ と
+$\wt{\Vector{b}}^n$ はほとんど同じなので、
+無理なく一つのプログラムで処理することができる。
+
+{\footnotesize
+\verbatimfile{heat1g-v2.c}
+}
+
+\subsection{Robin 境界条件の場合の厳密解}
+
+(工事中 --- というよりも忘れないように書きかけておく)
+
+まず、同次境界条件
+\[
+  -u_x(0,t)+\gamma_1 u(0,t)=0,\quad
+   u_x(1,t)+\gamma_2 u(1,t)=0
+ \quad\mbox{($t\in(0,\infty)$)}
+\]
+のもとでの厳密解を Fourier の方法で求める。
+$\gamma_1,\gamma_2>0$ である。
+
+対応する固有値問題は
+\[
+  X''(x)=-\lambda X(x),\quad
+  -X'(0)+\gamma_1 X(0)=0,\quad X'(1)+\gamma_2 X(1)=0
+\]
+である。ここで $\lambda$ は定数であるが、
+よくある議論で $\lambda>0$ であることが分かる
+(「微分方程式2」2の講義ノート \cite{桂田1} を見よ)。
+この微分方程式の一般解は
+\[
+  X(x)=A\cos\sqrt{\lambda} x+B\sin\sqrt{\lambda}x
+ \quad\mbox{($A$, $B$ は任意定数)}
+\]
+である。境界条件に代入して
+\[
+  -\lambda B+\gamma_1 A=0,\quad
+  \lambda(-A\sin\lambda+B\cos\lambda)+\gamma_2(A\cos\lambda+B\sin\lambda)=0.
+\]
+すなわち
+\[
+ \begin{pmatrix}
+  \gamma_1 & -\sqrt{\lambda}\\
+  -\sqrt{\lambda}\sin\sqrt{\lambda}+\gamma_2\cos\sqrt{\lambda} &
+   \sqrt{\lambda}\cos\sqrt{\lambda}+\gamma_2\sin\sqrt{\lambda}
+ \end{pmatrix}
+ \begin{pmatrix}
+   A \\ B
+ \end{pmatrix}
+ =
+ \begin{pmatrix}
+  0 \\ 0
+  \end{pmatrix}.
+\]
+非自明解を持つために
+\begin{align}
+ 0&=\left|
+   \begin{matrix}
+    \gamma_1 & -\sqrt{\lambda}\\
+   -\sqrt{\lambda}\sin\sqrt{\lambda}+\gamma_2\cos\sqrt{\lambda} &
+    \sqrt{\lambda}\cos\sqrt{\lambda}+\gamma_2\sin\sqrt{\lambda}
+   \end{matrix}
+   \right|\\
+  &=\left(\gamma_1\gamma_2-\lambda\right) \sin\sqrt{\lambda}
+  +\left(\gamma_1+\gamma_2\right)\sqrt{\lambda}\cos\sqrt{\lambda}.
+  \nonumber
+\end{align}
+  これは $\sqrt{\gamma_1\gamma_2}\not\in\dfrac{\pi}{2}+\pi\Z$ のとき、
+\begin{equation}
+ \tan\sqrt{\lambda}=\frac{\left(\gamma_1+\gamma_2\right)\sqrt{\lambda}}
+                  {\lambda-\gamma_1\gamma_2}
+ \label{eq:固有値を定める方程式＠ロバンの場合}
+\end{equation}
+に同値である。一方
+  $\sqrt{\gamma_1\gamma_2}\in\dfrac{\pi}{2}+\pi\Z$ のときは、
+\[
+ \lambda=\gamma_1\gamma_2\quad\mbox{または}\quad
+ \tan\sqrt{\lambda}=\frac{\left(\gamma_1+\gamma_2\right)\sqrt{\lambda}}
+                         {\lambda-\gamma_1\gamma_2}.
+\]
+
+(\ref{eq:固有値を定める方程式＠ロバンの場合}) の場合、正の解全体は
+\[
+  \lambda_1<\lambda_2<\cdots\to\infty
+\]
+と並べることが出来、
+\[
+ \lim_{n\to\infty}\left|\lambda_n-\left(n-\frac{1}{2}\right)^2\pi^2\right|=0
+\]
+であることが分かる。$\lambda=\lambda_n$ のとき、
+(\ref{eq:固有値を定める方程式＠ロバンの場合}) の解は、
+\[
+ \begin{pmatrix}
+  A \\ B
+  \end{pmatrix}
+  =
+  t
+ \begin{pmatrix}
+  \sqrt{\lambda} \\ \gamma_1
+  \end{pmatrix}\quad\mbox{($t\ne 0$)}.
+\]
+対応する固有関数は
+\[
+  X(x)=\sqrt{\lambda}\cos\sqrt{\lambda} x+\gamma_1\sin\sqrt{\lambda} x.
+\]
+
+固有値の近似値を求め、固有関数のグラフの概形を描くのは簡単である。
+\begin{itembox}{Mathematica で遊ぶ}
+\begin{verbatim}
+  gamma1=1
+  gamma2=1
+  solnear[x0_]:=FindRoot[Tan[x]-(gamma1+gamma2)*x/(x-gamma1*gamma2)==0,
+   {x,x0},WorkingPrecision->20,AccuracyGoal->40]
+  rootlambda[1]= x /. solnear[1.5]
+  rootlambda[n_]:=rootlambda[n]=x /.  solnear[rootlambda[n-1]+Pi]
+  Table[rootlambda[n],{n,10}]
+  eigenfunc[n_]:=Plot[rootlambda[n]*Cos[rootlambda[n]*x]
+                     +gamma1*Sin[rootlambda[n]*x],{x,0,1}]
+\end{verbatim}
+\end{itembox}
+
+$\gamma_1$, $\gamma_2$ が小さい時に Neumann 境界条件に近いか、
+$\gamma_1$, $\gamma_2$ が大きい時に Dirichlet 境界条件に近いか？
+などなど、研究に値すると思う。
+
+\section{周期境界条件}
+
+  うっかりしていたのだが、\textbf{周期境界条件}と呼ばれる条件
+\begin{equation}
+   u(0,t)=u(1,t),\quad u_x(0,t)=u_x(1,t)\quad\mbox{($t\in(0,\infty)$)}
+\end{equation}
+も良く出て来る。
+
+\subsection{なぜ周期境界条件と呼ぶか}
+
+(準備中)
+
+\subsection{差分方程式の作り方}
+
+\subsubsection{素朴な方法}
+
+(工事中)
+\[
+  U_0^{n+1}=U_{N}^{n+1},\quad
+ \frac{U_1^{n+1}-U_0^{n+1}}{h}=
+ \frac{U_N^{n+1}-U_{N-1}^{n+1}}{h}.
+\]
+
+\subsubsection{周期数列に対する差分方程式を用いる方法}
+
+(工事中)
+
+  $n$ を固定したとき、
+$\{U_i^{n+1}\}$ が $i$ について、周期 $N$ の周期数列である:
+\[
+  U_{i+N}^{n+1}=U_{i}^{n+1}\quad\mbox{($i\in\Z$, $n\ge 0$)}
+\]
+ことを用いる。
+以下の考え方は円盤・円環領域での Laplacian の近似に通じるものがある。
+
+  独立な成分として、
+$U_0^{n+1}$, $U_1^{n+1}$, $\cdots$, $U_{N-1}^{n+1}$ という $N$ 個が取れる。
+$N$ 個の方程式を課すのが自然で、
+$i=0,1,\cdots,N-1$ について
+\[
+ (1+2\theta\lambda)U_{i}^{n+1}-\theta\lambda(U_{i+1}^{n+1}+U_{i-1}^{n+1})
+ =
+ (1-2(1-\theta)\lambda)U_{i}^{n}-(1-\theta)\lambda(U_{i+1}^{n}+U_{i-1}^{n})
+\]
+を採用する。
+ただし $1\le i\le N-2$ については、直接この方程式で大丈夫だが、
+$i=0$ については、$U_{i-1}^{n+1}=U_{-1}^{n+1}$ を $U_{N-1}^{n+1}$ で置き換えた
+\[
+ (1+2\theta\lambda)U_{0}^{n+1}-\theta\lambda(U_{1}^{n+1}+U_{N-1}^{n+1})
+ =
+ (1-2(1-\theta)\lambda)U_{0}^{n}-(1-\theta)\lambda(U_{1}^{n}+U_{N-1}^{n})
+\]
+を、
+$i=N-1$ については、$U_{i+1}^{n+1}=U_{N}^{n+1}$ を $U_{0}^{n+1}$ で置き換えた
+\[
+ (1+2\theta\lambda)U_{N-1}^{n+1}-\theta\lambda(U_{0}^{n+1}+U_{N-2}^{n+1})
+ =
+ (1-2(1-\theta)\lambda)U_{N-1}^{n}-(1-\theta)\lambda(U_{0}^{n}+U_{N-2}^{n})
+\]
+を用いる。
+
+こうして
+\[
+ {\cal A}U^{(n+1)}=b^{(n)}
+\]
+を得る。ただし
+\[
+ A=
+ \left(
+ \begin{array}{ccccc}
+  1+2\theta\lambda& -\theta\lambda &  &  & -\theta\lambda \\
+  -\theta\lambda & 1+2\theta\lambda & -\theta\lambda & \\
+                 & \ddots & \ddots & \ddots & \\
+                 &        & -\theta\lambda &1+2\theta\lambda &-\theta\lambda \\
+  -\theta\lambda &        &                &-\theta\lambda&1+2\theta\lambda
+ \end{array}
+ \right)
+\]
+
+この係数行列は三重対角行列ではないが、
+比較的簡単に LU 分解できる。
+
+\bigskip
+
+\begin{center}
+  時間が欲しいなあ…せっかくつかみかけたものがこぼれ落ちていくような…
+\end{center}
+
+\chapter{2次元領域における熱伝導方程式}
+
+\section{Fourier の方法の限界}
+
+  $\Omega$ を $\R^d$ における領域\footnote{領域とは、連結開集合のこと
+である。$\R^1$ においては、領域=開区間であるが、$\R^d$ ($d\ge 2$) にお
+いては、開区間でない領域はたくさんある。}とするとき、$\Omega$ における
+熱伝導方程式の初期値境界値問題 (境界条件は同次 Dirichlet 境界条件)
+\begin{eqnarray}
+ u_t(x,t)&=&\Laplacian u(x,t)\quad\mbox{($(x,t)\in\Omega\times(0,\infty)$)},\\
+ u(x,t)&=&0\quad\mbox{($(x,t)\in\Gamma\times(0,\infty)$)},\\
+ u(x,0)&=& f(x)\quad\mbox{($x\in\overline\Omega$)}
+\end{eqnarray}
+を考えよう。
+ここで $\Gamma$ は $\Omega$ の境界\footnote{例えば、
+$d=1$, $\Omega=(0,1)$ であれば $\rd\Omega=\{0,1\}$.
+$\rd$ は本来は境界多様体を表わす記号であり、
+境界多様体と位相空間の部分集合の境界とは異なる概念であるが、
+滑らかな境界を持つ開集合の場合には、両者は一致する。} $\rd\Omega$ で、
+十分滑らかであるとする。
+$\overline{\Omega}$ は $\Omega$ の閉包 $[a,b]\times[c,d]$ である。
+また、$f$ は $\overline\Omega$ 上定義された与えられた関数である。
+
+  すでに $d=1$, $\Omega=(0,1)$ の場合には、「微分方程式2」で学んでいる。
+一口にまとめると
+\begin{center}
+\textbf{1次元熱伝導方程式は Fourier の方法で解ける}
+\end{center}
+となる。
+
+  ところで、(残念ながら) 多次元領域 (いいかえると $d\ge 2$) の場合には、
+Fourier の方法は万能とは言えない。なぜそうなのかを、以下に見てみよう。
+
+  まず、固有値問題が現われるところまでは、1次元の場合と同じである。
+熱方程式と境界条件を満す $u(x,t)=\zeta(x)
+\eta(t)$ の形の関数 (で恒等的には $0$ でないもの) を満すことを目標にすえる。
+境界条件に代入することによって、
+\[
+  \zeta(x)=0\quad\mbox{($x\in \Gamma$)}
+\]
+が得られる。一方、熱方程式に代入すると
+\[
+  \zeta(x)\eta'(t)=\Laplacian \zeta(x) \eta(t)
+\]
+となるから
+\[
+  \frac{\eta'(t)}{\eta(t)}=\frac{\Laplacian \zeta(x)}{\zeta(x)}
+\]
+が得られる。
+この等式の値は定数となるので、それを $-\lambda$ とおくと
+\footnote{負号 $-$ をつけるのは、世の中の習慣に合わせるため。
+$\Laplacian$ の固有値は 負 (Neumann 境界条件の場合は、非正) になるので、
+符号を変えて $-\Laplacian$ を考える (固有値は正となる) 習慣が
+広まっている。正値でないと分数巾などを考えることもできないし。}、
+\begin{eqnarray*}
+  \eta'(t)&=&-\lambda \eta(t),\\
+  \Laplacian\zeta(x)&=&-\lambda \zeta(x).
+\end{eqnarray*}
+
+  こうして、$\zeta=\zeta(x)$ については、
+$-\Laplacian$ に関する固有値問題
+\begin{eqnarray}
+  -\Laplacian \zeta&=&\lambda\zeta \quad\mbox{(in $\Omega$)},\\
+  \zeta&=&0\quad\mbox{(on $\Gamma$)},\\
+  \zeta&\not\equiv& 0
+\end{eqnarray}
+が導かれた。
+
+  空間の次元 $d$ が $1$ に等しい場合は、
+この固有値問題を定数係数線形常微分方程式に対する特性根の方法で
+解くことができて、スイスイと話が進んだのだが、
+$d\ge 2$ の場合は、この方程式は偏微分方程式であって、簡単ではない。
+
+  結論のみ述べると、
+この固有値問題には、$d=1$ の場合と同様の解が存在する (藤田他
+\cite{Fujita-Kuroda-Itou} 参照)。その解 $\zeta_n$,
+$\lambda_n$ ($n\in\N$) を用いれば、
+Fourier の方法の議論は $n=1$ の場合と (一応は) 同様に進めることができるが、
+実は固有値問題の解の存在は抽象的に保証されるだけで、
+一般には解は具体的に求められない、という限界がある。
+
+\begin{screen}
+\begin{center}
+  \textbf{多次元の固有値問題は特別な場合をのぞいて具体的には解けない！}\\
+  \textbf{$\longrightarrow$ 多次元の Fourier の方法には限界がある}
+\end{center}
+\end{screen}
+
+もっとも、
+この事情 (解の存在が保証されるだけで、解の具体的な表示式は得られない) は、
+Fourier の方法を適用する場合に限ったことではなくて、
+他のどんな方法\footnote{熱伝導方程式の解法としては、
+(1) 積分方程式を解いて Green 関数を (やや間接的に) 構成する、
+(2) 作用素の半群理論を用いる、などの方法がある。
+前者については、例えば伊藤 \cite{伊藤1}, \cite{伊藤2} を見よ 
+(ただし、この本では Green 関数のことを基本解と呼んでいる)。
+後者については、
+例えば増田 \cite{増田1} を見ると良い。}を用いた場合も同様である。
+
+\begin{yodan}
+  一般の領域で 固有値、固有関数がどうなっているか知りたい場合、
+数値計算する手もある。例えば菊地＆山本 \cite{菊地・山本} には、
+正方形領域における Laplacian の固有値・固有関数を差分法で
+計算するプログラムが載っている
+(1997年度卒研の丹羽功・山田英二 \cite{丹羽・山田} も参考になる)。
+また有限要素法で計算するプログラムを書くのも難しくはない
+(1997年度卒研の高藤康孝 \cite{高藤康孝},
+1998年度卒研の鈴木康大 \cite{鈴木康大})。 \qed
+\end{yodan}
+
+\begin{yodan}
+  どうも 藤田他 \cite{Fujita-Kuroda-Itou} は読みにくいので、
+簡単に要点を書いておく\footnote{これは俣野 \cite{俣野} からの引用だが、
+この本に証明が書いてあるわけではない。}。
+多次元領域 $\Omega$ における $-\Laplacian$ (境界条件は Dirichlet) の固有値は、
+正の無限大に発散する実数の無限列
+%
+\[
+  0<\lambda_1<\lambda_2\le \lambda_3\le\lambda_4\le \cdots \to \infty
+\]
+%
+をなす。対応する固有関数を $\varphi_k$ とおくと、$\forall w\in
+L^2(\Omega)$ は、
+%
+\[
+  w=\sum_{k=1}^\infty c_k w_k \quad\mbox{(in $L^2(\Omega)$)}
+\]
+%
+と展開できる。$\{\varphi_k\}_{k\in\N}$ は正規直交系であるように選べるから、
+その場合は
+%
+\[
+  c_k=\int_\Omega w(x)\overline{\varphi_k(x)}\Dx
+\]
+%
+で係数 $\{c_k\}$ が定められる。ゆえに熱伝導方程式の解は
+%
+\[
+  u(x,t)=\sum_{k=1}^\infty c_k e^{-\lambda_k t}\varphi_k(x),
+  \quad c_k=\dsp\int_{\Omega} f(x)\overline{\varphi_k(x)}\Dx
+\]
+%
+であり、漸近評価 
+%
+\[
+ (\forall \delta>0) \quad (\exists C>0) \quad (\forall t\ge \delta)
+  \quad\mbox{s.t.}\quad
+  |u(x,t)|\le C e^{-\lambda_1 t}
+\]
+%
+が成り立つ。熱伝導方程式の Green 関数は
+%
+\[
+  U(x,y,t)=\sum_{k=1}^\infty e^{-\lambda_k t}\varphi_k(x)\varphi_k(y)
+\]
+%
+%
+であり、さらに $\Laplacian$ の Green 関数は
+%
+\[
+  G(x,y)=-\int_0^\infty U(x,y,t)\,\Dt=-\sum_{k=1}^\infty
+  \frac{1}{\lambda_k}  \varphi_k(x)\varphi_k(y)
+\]
+%
+と表わすことができる。 \qed
+\end{yodan}
+
+\begin{jremark}
+  この節では、解を求める方法、解の存在を示す方法について述べたが、
+古典解の一意性等については、空間 $1$ 次元の場合とほとんど同様である。
+すなわち、最大値原理が成立し、それから古典解の一意性、正値性、
+順序保存性などが導かれる。
+例えば Protter and Weinberger \cite{Protter-Weinberger} を参照せよ。 \qed
+\end{jremark}
+
+\section{長方形領域における初期値境界値問題}
+
+  前節では Fourier の方法の限界について述べたが、
+いくつかの簡単だが重要な場合に、Fourier の方法はそのパワーを発揮する。
+ここでは長方形領域における初期値境界値問題の解を紹介しよう。
+
+(この文書の古い版では、
+円盤領域における初期値境界値問題の解について言及してあったが、
+それについては、桂田 \cite{桂田FDM2} を見よ。)
+
+  $\Omega$ が $2$ 次元空間内の長方形領域 $(0,L)\times (0,H)$ の場合に
+は、さらなる変数分離によって、固有値問題
+\begin{eqnarray*}
+  &&\frac{\rd^2\zeta}{\rd x^2}+\frac{\rd^2\zeta}{\rd y^2}=-\lambda\zeta
+   \quad\mbox{($0<x<L$, $0<y<H$)},\\
+  &&\zeta(0,y)= \zeta(L,y)=0, \quad
+  \zeta(x,0)= \zeta(x,H)=0 \quad \mbox{($0\le x\le L$, $0\le y\le
+H$)},\\
+   &&\zeta\not\equiv 0
+\end{eqnarray*}
+が解ける。実際
+\[
+  \zeta(x,y)=X(x) Y(y)
+\]
+とすると、まず境界条件から
+\[
+  X(0)=X(L)=Y(0)=Y(H)=0.
+\]
+微分方程式に代入して、
+\[
+  X''(x) Y(y)+X(x) Y''(y)=-\lambda X(x)Y(y).
+\]
+ゆえに
+\[
+  \frac{X''(x)}{X(x)}=-\lambda-\frac{Y''(y)}{Y(y)}.
+\]
+この式の値は定数であることが分るから、それを $\mu$ とおくと、
+\[
+  X''(x)=\mu X(x), \quad Y''(y)=-(\lambda+\mu)Y(y).
+\]
+  $X$ と $\mu$, $Y$ と $\lambda+\mu$ という二組のそれぞれが $1$ 次元の
+固有値問題の解ということで、
+\[
+ (\exists m\in\N)\quad \mu=-\left(\frac{m\pi}{L}\right)^2,
+  \quad X(x)=C\sin\frac{m\pi x}{L},
+\]
+\[
+ (\exists n\in\N)\quad (\lambda+\mu)=\left(\frac{n\pi}{H}\right)^2,
+  \quad Y(y)=C'\sin\frac{n\pi y}{H}.
+\]
+ゆえに
+\[
+ (\exists (m,n)\in\N\times\N)\quad
+ \lambda=\lambda_{mn},\quad \zeta(x,y)=C\zeta_{mn}(x,y)
+ \quad\text{($C$ は任意定数)}.
+\]
+ただし
+\[
+  \zeta_{mn}(x,y):=\sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H},
+  \quad
+  \lambda_{m,n}=\left[\left(\frac{m}{L}\right)^2
+                +\left(\frac{n}{H}\right)^2\right]\pi^2
+  \quad
+  \mbox{($m$, $n\in \N$)}.
+\]
+
+  これから熱伝導方程式と境界条件を満す特解として
+\[
+  b_{m,n}e^{-((m/L)^2+(n/H)^2)\pi^2t}
+   \sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H}
+  \quad\mbox{($m$, $n\in\N$)}
+\]
+が得られる (ここで $b_{m,n}$ は任意定数)。
+これから任意の $\{b_{mn}\}$ について、
+\[
+  u(x,y,t):=\sum_{m,n=1}^\infty b_{m,n}e^{-((m/L)^2+(n/H)^2)\pi^2t}
+  \sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H}
+\]
+は熱伝導方程式と境界条件を満す (ただし級数がまともな収束をすることは仮定する)。
+後は、適当な$b_{m,n}$ を取ることによって、初期条件を満すように、すなわち
+\[
+   \sum_{m,n=1}^\infty b_{m,n}\sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H}
+   =f(x,y)
+\quad\mbox{($(x,y)\in[0,L]\times[0,H]$)}
+\]
+が成り立つように出来ればよいが、これは以下のようにして可能である。
+
+  簡単のため、$f$ は $C^1$ 級で、$f=0$ on $\Gamma$ を満たす関数とする。
+
+  $y\in[0,H]$ を任意に固定して考えると、$f(\cdot,y)\colon x\mapsto
+f(x,y)$ は $[0,L]$ 上定義され、境界で $0$ となる $C^1$-級関数である。
+ゆえに Fourier 正弦級数展開できる。つまり
+\[
+  f(x,y)=\sum_{m=1}^\infty B_m(y)\sin\frac{m\pi x}{L}
+  \quad\mbox{($x\in[0,L]$ につき一様に収束)},\quad
+  B_m(y):=\frac{2}{L}\int_{0}^L f(x,y)\sin\frac{m\pi x}{L}\Dx.
+\]
+
+  ところで、$y\mapsto B_m(y)$ は $[0,H]$ 上定義された $C^1$- 級関数で、
+境界で $0$ となることが容易に分るから、
+やはり Fourier 正弦級数展開可能である。すなわち
+\[
+  B_m(y):=\sum_{n=1}^\infty b_{m,n}\sin\frac{n\pi y}{H}\quad
+  \mbox{($y\in[0,H]$ につき一様に収束)},\quad
+  b_{m,n}:=\frac{2}{H}\int_0^H B_m(y)\sin\frac{n\pi y}{H}\Dy.
+\]
+まとめると、
+\begin{align*}
+  f(x,y)&=\sum_{m=1}^\infty B_m(y)\sin\frac{m\pi x}{L}
+  =\sum_{m=1}^\infty
+   \sum_{n=1}^\infty b_{m,n}\sin\frac{n\pi y}{H}
+   \sin\frac{m\pi x}{L},  \quad\mbox{(どんな収束？)} \\
+  b_{m,n}&=\frac{2}{H}\int_0^H B_m(y)\sin\frac{n\pi y}{H}\Dy
+  =\frac{2}{H}\int_0^H
+    \left(
+       \frac{2}{L}\int_{0}^L f(x,y)\sin\frac{m\pi x}{L}\Dx
+    \right)
+    \sin\frac{n\pi y}{H}\Dy\\
+  &=\frac{4}{LH}\int_0^H\!\!\int_0^L f(x,y)\sin\frac{m\pi x}{L}
+    \sin\frac{n\pi y}{H}\DxDy.
+\end{align*}
+
+  こうして、次の解の公式が得られた。
+\begin{align*}
+  u(x,y,t)&=\sum_{m,n=1}^\infty b_{m,n}e^{-((m/L)^2+(n/H)^2)\pi^2t}
+  \sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H},\\
+  b_{m,n}&=\frac{4}{L H}\int_0^H\!\!\int_0^L f(x,y)
+   \sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H} \Dx\Dy.
+\end{align*}
+
+  ごちゃごちゃしているので、
+$L=H=1$ の場合を書いておく ($n=1$ の場合と比較してみよう)。
+\[
+  u(x,y,t)=\sum_{m,n=1}^\infty b_{m,n}e^{-(m^2+n^2)\pi^2t}
+  \sin m\pi x\sin n\pi y,
+  \quad
+  b_{m,n}=4\int_0^1\!\!\int_0^1 f(x,y)
+   \sin m\pi x\sin n\pi y \;\Dx\,\Dy.
+\]
+
+\begin{jremark}[変数分離の形の固有関数を探せば十分であること]
+  上の議論で、$\overline\Omega$ で $C^1$-級で、
+$\Gamma=\rd\Omega$ で $0$ となる任意の関数が $\sin\dfrac{m\pi x}{L}
+\sin\dfrac{n\pi y}{H}$ で展開されることが証明されているので、
+初期値境界値問題の解の構成には一応は成功しているが、
+固有値問題については、
+固有関数が $x$ の関数と $y$ の関数の積の形のものしか考えていないので、
+解決したとは言えない。
+
+  そこで $\Laplacian\zeta=-\lambda\zeta$ (in $\Omega$), $\zeta=0$
+(on $\Gamma$), $\zeta\not\equiv 0$ を満たす $\zeta$ が $\overline
+\Omega$ で十分なめらかと仮定して\footnote{もしも1変数(1次元)であれば、
+$\zeta$ が $-\zeta''(x)=\lambda\zeta(x)$ を満たすことから、
+$\zeta$ が無限回微分可能であることが導かれる (分かりますか？)。
+多変数の場合は、それほど簡単ではないが…} 追求してみよう。
+まず
+%
+\[
+  \zeta(x,y)
+  =\sum_{m,n=1}^\infty b_{m,n}\sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H}
+\]
+と Fourier 級数展開し、方程式に代入すると
+\[
+  -\sum_{m,n=1}^\infty b_{m,n}
+  \left[
+    \left(\frac{m\pi}{L}\right)^2+\left(\frac{n\pi}{H}\right)^2
+  \right]
+  \sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H}
+ =-\lambda
+  \sum_{m,n=1}^\infty b_{m,n}
+  \sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H}.
+\]
+移項して
+\[
+ \sum_{m,n=1}^\infty b_{m,n}
+  \left[
+    \left(\frac{m\pi}{L}\right)^2+\left(\frac{n\pi}{H}\right)^2
+    -\lambda
+  \right]
+  \sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H}=0.
+\]
+これから
+\[
+ \forall m\in\N,\quad
+ \forall n\in\N,\quad
+   b_{m,n}
+  \left[
+    \left(\frac{m\pi}{L}\right)^2+\left(\frac{n\pi}{H}\right)^2
+    -\lambda
+  \right]=0.
+\]
+  $\zeta\not\equiv 0$ としてあるので、
+少なくとも一組の $(m,n)$ については $b_{m,n}\ne 0$ である。
+$b_{m,n}\ne 0$ となる $(m,n)$ については、
+\begin{equation}
+   \lambda=
+    \left(\frac{m\pi}{L}\right)^2+\left(\frac{n\pi}{H}\right)^2=\lambda_{mn}.
+  \tag{☆}
+\end{equation}
+ゆえに固有値は上で求めたもので尽きていることがわかる。
+また 1 つの $\lambda$ に対して、(☆) を満たす $(m,n)$ は
+有限個しか存在しないことは明らかである
+($\because$ $|m|\le\frac{L}{\pi}\sqrt{\lambda}$,
+$|n|\le\frac{H}{\pi}\sqrt{\lambda}$ であるから)。
+さらに
+\[
+ \zeta(x,y)=\sum_{\text{$(m,n)$ は(☆)を満たす}}
+  b_{m,n}\sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H}
+ \in
+ \mathrm{span}
+  \left\{\sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H};
+  \mbox{$m$, $n$ は(☆)を満たす}
+  \right\}
+\]
+であるから、
+固有空間の基底も (変数分離の形のものだけで) 求まっていることになる。
+
+例えば $L=H=1$のとき、$\lambda=5\pi^2=(1^2+2^2)\pi^2$ は固有値で、
+$\lambda=(m^2+n^2)\pi^2$ を満たす $(m,n)$ は $(1,2)$, $(2,1)$ の 2 つで
+ある。そして
+\[
+ \zeta(x,y)=C_1\sin\pi x\sin2\pi y+C_2\sin2\pi x\sin\pi y
+\quad\mbox{($C_1$, $C_2$ は同時に $0$ とはならない任意の定数)}
+\]
+が対応する固有関数を与える。 \qed
+\end{jremark}
+
+\paragraph{課題}
+  同次 Neumann 境界条件を課した初期値境界値問題の解の公式を求めよ
+(証明が出来ればそれに越したことはないが、とりあえず公式を求めるだけでよい)。
+
+\subparagraph{ヒント}
+  $C^1$-級の関数 $f\colon\R\times\R\to\R$ が
+\[
+ f(x+p L,y+q H)=f(x,y)\quad\mbox{($(x,y)\in\R^2$, $p,q\in\Z$)}
+\]
+という周期性を持つならば、$\Omega:=[0,L]\times[0,H]$ として、
+\begin{align*}
+ f(x,y)&=\frac{1}{4}a_{00}
+  +\frac{1}{2}
+  \left(
+   \sum_{n=1}^\infty a_{0n}\cos\frac{2n\pi y}{H}
+  +\sum_{m=1}^\infty a_{m0}\cos\frac{2m\pi x}{L}
+  +\sum_{n=1}^\infty b_{0n}\sin\frac{2n\pi y}{H}
+  +\sum_{m=1}^\infty c_{m0}\sin\frac{2m\pi x}{L}
+  \right)\\
+ &
+  +\sum_{m,n=1}^\infty
+  \left(
+   a_{mn}\cos\frac{2m\pi x}{L}\cos\frac{2n\pi y}{H}
+  +b_{mn}\cos\frac{2m\pi x}{L}\sin\frac{2n\pi y}{H}
+  +c_{mn}\sin\frac{2m\pi x}{L}\cos\frac{2n\pi y}{H}
+  \right.\\
+  &\qquad
+   \left.
+  +d_{mn}\sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H}
+  \right),
+\end{align*}
+と展開できる (どういう収束?)。
+ここで係数は次式で与えられる。
+\begin{align*}
+ a_{mn}=\frac{4}{LH}\dint_{\Omega}
+        f(x,y)\cos\frac{2m\pi x}{L}\cos\frac{2n\pi y}{H}\;\DxDy,\\
+ b_{mn}=\frac{4}{LH}\dint_{\Omega}
+        f(x,y)\cos\frac{2m\pi x}{L}\sin\frac{2n\pi y}{H}\;\DxDy,\\
+ c_{mn}=\frac{4}{LH}\dint_{\Omega}
+        f(x,y)\sin\frac{2m\pi x}{L}\cos\frac{2n\pi y}{H}\;\DxDy,\\
+ d_{mn}=\frac{4}{LH}\dint_{\Omega}
+        f(x,y)\sin\frac{2m\pi x}{L}\sin\frac{2n\pi y}{H}\;\DxDy.
+\end{align*}
+
+  特に $f\colon\Omega\to\R$ が $C^1$-級かつ $f=0$ on $\rd\Omega$ を
+満すならば、(周期 $2L$, $2H$ として考えて)
+\[
+  f(x,y)=\sum_{m,n=1}^\infty d_{mn}
+  \sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H},
+\]
+\[
+ d_{mn}=\frac{4}{LH}\dint_{[0,L]\times[0,H]}
+       f(x,y)\sin\frac{m\pi x}{L}\sin\frac{n\pi y}{H}\;\DxDy
+\]
+展開できる。
+
+\chapter{2次元長方形領域における熱伝導方程式に対する差分法}
+
+\section{Target 問題 (Dirichlet境界条件)}
+
+  この章では、$\Omega$ は $\R^2$ の開区間 $(a,b)\times(c,d)$ であると
+し、$\Gamma=\rd\Omega$ とする。このとき、$\Omega$
+における熱伝導方程式の初期値境界値問題
+%
+\begin{align}
+\Dfrac{\rd u}{\rd t}(x,y,t)&= \Laplacian u(x,y,t)
+   \quad\mbox{($t>0$, $(x,y)\in\Omega$)} \label{eq:二次元熱伝導方程式} \\
+u(x,y,t)&=\alpha(x,y)
+   \quad\mbox{($t>0$, $(x,y)\in\Gamma$)} \label{eq:二次元ディリクレ境界条件} \\
+u(x,y,0)&=f(x,y)
+   \quad\mbox{($(x,y)\in\overline\Omega$)} \label{eq:二次元初期条件})
+\end{align}
+を考える。ただし
+%
+\begin{itemize}
+\item
+  $u$ は $\overline\Omega\times [0,\infty)$ を定義域とする未知
+関数:
+\[
+  u\colon\overline\Omega\times [0,\infty)\ni (x,y,t)\longmapsto u(x,y,t)\in\R.
+\]
+%
+\item
+  $\alpha$ は $\Gamma$ 上定義された既知関数\footnote{$d=1$ のときは、
+領域は開区間に他ならず、その境界は二点からなる集合であったので、境界値
+とは二つの実数値であったが、$d\ge 2$ では境界値は関数として扱う必要が
+ある。}。
+%
+\item
+  $f$ は $\overline\Omega$ 上定義された既知関数。
+%
+\item
+  $\Laplacian$ は $\R^2$ における Laplace 作用素 (Laplacian):
+\[
+  \Laplacian:= \frac{\rd^2}{\rd x^2}+\frac{\rd^2}{\rd y^2}.
+\]
+\end{itemize}
+
+  既に述べたように、空間1次元の場合と異なり、開区間は領域としては
+かなり特別なものであるので、残念ながら上の問題は十分一般的であるとは言
+えない。が、それでもこの問題を自在に扱えるだけの知識があれば、実り多い
+実験が遂行できるであろう。
+
+\bigskip
+
+以下、差分スキームと共に、プログラム例を示す。
+これらのプログラムを利用するにあたっては、
+付録の \ref{chapter:プログラム} 「サンプルプログラムについて」を見て欲しい。
+
+\section{陽解法 (前進 Euler 法)}
+
+  領域 $\Omega$ を座標軸に平行な格子線で $x$ 軸、$y$ 軸方向にそれぞれ
+ $N_x$ 等分, $N_y$ 等分し、格子点を $(x_i,y_j)$ と表わす。すなわち
+\[
+  h_x := \frac{b-a}{N_x},
+  \quad
+  h_y := \frac{d-c}{N_y},
+\]
+さらに
+\begin{align*}
+  x_i &:= a+i h_x \quad\mbox{($i=0,1,\cdots,N_x$)}, \\
+  y_j &:= c+j h_y \quad\mbox{($j=0,1,\cdots,N_y$)}
+\end{align*}
+とおく。
+
+  $N_x$ を $x$ 軸方向の分割数、$N_y$ を $y$ 軸方向の分割数、$h_x$ を 
+$x$ 軸方向の刻み幅、$h_y$ を $y$ 軸方向の刻み幅と呼ぶ。
+
+  次に $\tau>0$ を固定し、
+\[
+    t_n:= n\tau \quad\mbox{($n=0,1,2,\cdots$)}
+\]
+とおく。
+
+  後のために便利なので、
+\[
+  \lambda_x:=\Dfrac{\tau}{h_x^2}, \quad
+  \lambda_y:=\Dfrac{\tau}{h_y^2}, \quad
+  \lambda:=\lambda_x+\lambda_y
+\]
+とおく。
+
+  我々は $(x_i, y_j, t_n)$ における $u$ の値、すなわち
+\[
+  u_{i,j}^n:= u(x_i, y_j, t_n)
+  \quad\mbox{($i=0,1,\cdots,N_x$;
+              $j=0,1,\cdots,N_y$;
+              $n=0,1,\cdots$)}
+\]
+の近似値
+\[
+   U_{i,j}^n
+  \quad\mbox{($i=0,1,\cdots,N_x$;
+              $j=0,1,\cdots,N_y$;
+              $n=0,1,\cdots$)}
+\]
+を求めることを目標にすえる。
+
+  $u_t(x_i, y_j, t_n)$ を
+%
+\[
+  u_t(x_i, y_j, t_n)\kinji \frac{u_{i,j}^{n+1}-u_{i,j}^n}{\tau}
+\]
+%
+と前進差分近似し、$u_{x x}(x_i, y_j, t_n)$ と $u_{y y}(x_i, y_j, t_n)$ を
+それぞれ
+%
+\begin{align*}
+  u_{x x}(x_i, y_j, t_n)
+  &\kinji \frac{u_{i+1,j}^n-2u_{i,j}^n+u_{i-1,j}^n}{h_x^2},\\
+  u_{y y}(x_i, y_j, t_n)
+  &\kinji \frac{u_{i,j+1}^n-2u_{i,j}^n+u_{i,j-1}^n}{h_y^2}
+\end{align*}
+%
+と 2 階中心差分近似することを考えると、
+%
+\[
+  \frac{U_{i,j}^{n+1}-U_{i,j}^n}{\tau}
+  = \frac{U_{i+1,j}^n-2U_{i,j}^n+U_{i-1,j}^n}{h_x^2}
+   +\frac{U_{i,j+1}^n-2U_{i,j}^n+U_{i,j-1}^n}{h_y^2}
+\]
+なる差分方程式を得る。両辺に $\tau$ をかけてから、移項すると
+\begin{align*}
+  U_{i,j}^{n+1}&=
+  (1-2\lambda_x-2\lambda_y)U_{i,j}^n
+  +\lambda_x(U_{i+1,j}^n+U_{i-1,j}^n)
+  +\lambda_y(U_{i,j+1}^n+U_{i,j-1}^n)
+  \\
+  &\quad\mbox{($i=1,2,\cdots,N_x-1$;
+         $j=1,2,\cdots,N_y-1$;
+         $n=0,1,2,\cdots$)}
+\end{align*}
+が導かれる。
+
+  一方、境界条件からは
+%
+\iffalse
+\[
+  U_{i,j}^n=\alpha(x_i,y_j)
+  \quad\mbox{($i=0$ または $i=N_x$ または $j=0$ または $j=N_y$; 
+$n=1,2,\cdots$)}
+\]
+言い換えると
+%
+\fi
+\begin{align}
+  U_{0,j}^n&=\alpha(a,y_j), \quad U_{N_x,j}^n=\alpha(b,y_j)
+ \quad \mbox{($j=0,1,\cdots,N_y$; $n=1,2,\cdots$)}
+ \label{eq:左右の境界に対応する条件}
+ \\
+  U_{i,0}^n&=\alpha(x_i,c),\quad U_{i,N_y}^n=\alpha(x_i,d)
+ \quad \mbox{($i=0,1,\cdots,N_x$; $n=1,2,\cdots$)}
+ \label{eq:上下の境界に対応する条件}
+\end{align}
+%
+を得る。ここで(\ref{eq:左右の境界に対応する条件}) と(\ref{eq:上下の境
+界に対応する条件}) には重複があるため (\Ruby{かど}{角}点に対応している)、
+一つの $n$ につき、方程式の個数は
+%
+\[
+  2(N_x+N_y)
+\]
+%
+であることを注意しておこう。
+
+  初期条件からは、もちろん
+\[
+   U_{i,j}^0=f(x_i, y_j)
+  \quad\mbox{($i=0,1,\cdots,N_x$; $j=0,1,\cdots,N_y$)}
+\]
+を得る。
+
+\paragraph{まとめ}
+  3重添字を持つ未知数列 $\{U_{i,j}^n; i=0,1,\cdots,N_x,
+j=0,1,\cdots,N_y, n=0,1,2,\cdots\}$ を定めるための差分方程式として
+%
+\begin{align}
+\label{eq:2次元熱方程式の離散化}
+  U_{i,j}^{n+1}&=  (1-2\lambda_x-2\lambda_y)U_{i,j}^n
+                       +\lambda_x(U_{i+1,j}^n+U_{i-1,j}^n)
+                       +\lambda_y(U_{i,j+1}^n+U_{i,j-1}^n) \\
+  & \qquad  \mbox{($i=1,2,\cdots,N_x-1$;
+         $j=1,2,\cdots,N_y-1$;
+         $n=0,1,2,\cdots$)}, \nonumber \\
+\label{eq:2次元のディリクレ境界条件の離散化}
+  U_{i,j}^{n+1}&=\alpha(x_i,y_j) \\
+  & \qquad
+        \mbox{($(i,j)\in\{0,N_x\}\times\{0,1,\dots,N_y\}
+            \cup\{0,1,\cdots,N_x\}\times\{0,N_y\}$; 
+              $n=0,1,\cdots$)}, \nonumber \\
+\label{eq:2次元の初期条件の離散化}
+   U_{i,j}^0&=f(x_i, y_j)
+  \quad\mbox{($i=0,1,\cdots,N_x$; $j=0,1,\cdots,N_y$)}
+\end{align}
+%
+を考える。
+
+  上の方程式は一意可解である。言い換えると、
+(\ref{eq:2次元熱方程式の離散化}),
+(\ref{eq:2次元のディリクレ境界条件の離散化}),
+(\ref{eq:2次元の初期条件の離散化}) によって、$\{U_{i,j}^n\}$ は
+一通りに定まる。そのことは空間 1 次元の場合と同様にして分かる。
+
+  $0<\lambda\le 1/2$ であるときに、差分スキームが安定であり、
+$N\to\infty$ のとき差分解が偏微分方程式の厳密解に収束することは、空間 
+$1$ 次元の場合とまったく同様である。
+
+  ここで説明したアルゴリズムによるプログラムが
+\begin{center}
+\url{https://m-katsurada.sakura.ne.jp/program/fdm/heat2d-e.c}
+\end{center}
+から入手できる。
+
+\begin{itembox}{入手＆コンパイル (cglsc が必要)}%
+\begin{verbatim}
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/heat2d-e.c
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/smallmatrix.h
+cglsc heat2d-e.c
+./heat2d-e
+\end{verbatim}
+  色々尋ねられるが、例えば
+\begin{verbatim}
+Nx, Ny: 100 100
+Tmax: 1
+τ: 1e-5
+Δt: 0.001
+\end{verbatim} 
+\end{itembox}
+
+\section{陰解法}
+
+\subsection{領域を格子に分割する}
+
+  $\Omega$ を座標軸に平行な格子線で $x$ 軸, $y$ 軸方向に
+それぞれ $N_x$  等分、 $N_y$ 等分し、格子点を $(x_i, y_j)$ と表す。
+すなわち
+\[
+  h_x := \frac{b-a}{N_x},
+  \quad
+  h_y := \frac{d-c}{N_y}
+\]
+として
+\[
+  x_i := a+i h_x \quad \mbox{($i=0,1,\cdots,N_x$)}, \quad
+  y_j := c+j h_y \quad \mbox{($j=0,1,\cdots,N_y$)}
+\]
+とおく。
+
+  一方 $\tau>0$ を固定して、
+\[
+  t_n:= n\tau \quad\mbox{($n=0,1,2,\cdots$)}
+\]
+とおく。
+
+  我々の目標は $(x_i,y_j,t_n)$ における $u$ の値の近似値を求めることで
+ある。
+
+  以下現れる様々な方程式で、二重添字 $(i,j)$ の範囲を明確にするため、
+%
+\begin{eqnarray*}
+  \omega  &:=& \{(i,j); 1\le i\le N_x-1, \; 1\le j\le N_y-1 \} \\
+  \overline\omega  &:=& \{(i,j); 0\le i\le N_x, \; 0\le j\le N_y
+\} \\
+  \gamma &:=& \overline\omega\setminus\omega
+\end{eqnarray*}
+%
+とおき\footnote{これは、この文書オリジナルな記法だが、それぞれ 
+$\Omega$, $\overline\Omega$, $\Gamma$ に属する格子点の添字に対応すると
+言えば、筆者の気持は分かってもらえると信じる。}\footnote{$A\setminus
+B=\{x; \mbox{$x\in A$ かつ $x\not\in B$}\}$.}、さらに
+%
+\begin{eqnarray*}
+  u^n_{i,j} &:=& u(x_i,y_j,t_n)
+ \quad \mbox{($(i,j)\in\overline\omega$; $n=0,1,2,\cdots$)} \\
+  f_{i,j} &:=& f(x_i,y_j)
+ \quad \mbox{($(i,j)\in\overline\omega$)} \\
+  \alpha_{i,j} &:=& \alpha(x_i,y_j)
+ \quad \mbox{($(i,j)\in\gamma$)}.
+\end{eqnarray*}
+とおく。
+
+  後でしばしば、方程式や未知数の個数を勘定することになる。その準備とし
+て、集合 $\omega$, $\overline\omega$, $\gamma$ の要素の個数を数えると、
+\begin{eqnarray*}
+  \sharp \omega&=&(N_x-1)(N_y-1), \\
+  \sharp \overline\omega&=&(N_x+1)(N_y+1), \\
+  \sharp \gamma&=& 2(N_x+N_y)
+\end{eqnarray*}
+となる。
+ただし集合 $A$ に属する要素の個数を $\sharp A$ と表した。
+$\sharp \overline\omega$ は以下何回も登場するので、
+%
+\[
+  N:=\sharp\overline\omega= (N_x+1)(N_y+1)
+\]
+%
+とおこう。
+
+  後でよく出て来るので
+\[
+  \lambda_x := \frac{\tau}{h_x^2},
+  \quad
+  \lambda_y := \frac{\tau}{h_y^2}
+\]
+とおく。
+
+\subsection{偏微分方程式を離散化して出来る差分方程式}
+
+  $u^n_{i,j}$ の近似 $U^n_{i,j}$ を求めることを目標にする。$0\le
+\theta\le 1$ なるパラメーター $\theta$ を導入して、熱伝導方程式をいわ
+ゆる $\theta$-法で離散化すると
+%
+\begin{align*}
+  \frac{U^{n+1}_{i,j}-U^{n}_{i,j}}{\tau}
+  &=
+ (1-\theta)
+  \left(
+   \frac{U^{n}_{i+1,j}-2U^{n}_{i,j}+U^{n}_{i-1,j}}{h_x^2}
+   +
+   \frac{U^{n}_{i,j+1}-2U^{n}_{i,j}+U^{n}_{i,j-1}}{h_y^2}
+  \right) \\
+   &\quad+
+ \theta
+  \left(
+   \frac{U^{n+1}_{i+1,j}-2U^{n+1}_{i,j}+U^{n+1}_{i-1,j}}{h_x^2}
+   +
+   \frac{U^{n+1}_{i,j+1}-2U^{n+1}_{i,j}+U^{n+1}_{i,j-1}}{h_y^2}
+  \right) \nonumber
+\end{align*}
+%
+なる差分方程式を得る。
+添字 $(i,j)$ の範囲は通常\footnote{仮想格子点などを導入しなければ、
+という意味である。} $(i,j)\in\omega$ である。
+この式の両辺に $\tau$ をかけて移項して整理すると、
+%
+\begin{eqnarray}\label{eq:差分方程式}
+ &&
+ [1+2\theta(\lambda_x+\lambda_y)] U^{n+1}_{i,j}
+  -\theta
+   [
+    \lambda_x(U^{n+1}_{i+1,j}+U^{n+1}_{i-1,j})
+   +\lambda_y(U^{n+1}_{i,j+1}+U^{n+1}_{i,j-1})
+   ]
+   \\
+%
+&&\quad=[1-2(1-\theta)(\lambda_x+\lambda_y)]U^{n}_{i,j}
++(1-\theta)
+   [
+    \lambda_x(U^{n}_{i+1,j}+U^{n}_{i-1,j})
+   +\lambda_y(U^{n}_{i,j+1}+U^{n}_{i,j-1})
+   ]
+  \nonumber  \\
+ &&\qquad\qquad\mbox{($(i,j)\in\omega$; $n=0,1,2,\cdots$).}
+  \nonumber
+\end{eqnarray}
+
+\subsection{差分解の決定 --- 連立方程式の行列、ベクトル表現}
+
+  一方、境界条件からは
+%
+\begin{equation}\label{eq:境界条件からの式}
+  U^{n+1}_{i,j} = \alpha_{i,j}
+  \quad\mbox{($(i,j)\in\gamma$; $n=0,1,2,\cdots$)},
+\end{equation}
+%
+初期条件からは
+%
+\begin{equation}\label{eq:初期条件からの式}
+  U^{0}_{i,j} = f_{i,j}
+  \quad\mbox{($(i,j)\in\overline\omega$)}
+\end{equation}
+を得る。
+
+(\ref{eq:差分方程式}),
+(\ref{eq:境界条件からの式}),
+(\ref{eq:初期条件からの式}) から 3 重添字を持つ数列 $\{U^n_{i,j};
+(i,j)\in\overline \omega, n=0,1,2,\cdots\}$ は一意に決定されることを以
+下で示す。
+
+  そのため、まず $n=0,1,2,\cdots$ に対して
+%
+\[
+  U^n:= \{U^n_{i,j}\}_{(i,j)\in\overline\omega}
+\]
+%
+とおく (二重添字を持つ有限数列)。各 $n$ に対して $U^n$ は $N$ 次元のベ
+クトルとみなせる。空間 $1$ 次元の時と同様に、 $n$ が小さい方から順に 
+$U^n$ を求めて行く。
+
+  $U^0$ は (\ref{eq:初期条件からの式}) で一意に定まる。
+
+  $U^n$ が求まっているとき、
+(\ref{eq:差分方程式}), (\ref{eq:境界条件からの式}) は $N$ 個の未知数に
+関する $N$ 個の $1$ 次方程式になっている\footnote{(\ref{eq:差分方程式}) は、
+$\sharp\omega$ 個、(\ref{eq:境界条件からの式}) は $\sharp\gamma$ 個、
+合わせて $\sharp\omega+\sharp\gamma=\sharp\overline{\omega}=N$ 個。}。
+よって、
+%
+\[
+  \mbox{$N$ 次正方行列} \cdot
+  \mbox{$N$ 次元未知ベクトル}
+  =
+  \mbox{$N$ 次元既知ベクトル}
+\]
+%
+の形の連立$1$ 次方程式に表される
+(行の個数$=$方程式の個数=未知数の個数$=$列の個数)。
+
+  この方程式を実際に書き下すためには、
+$U^n=\{U^n_{i,j}\}_{(i,j)\in\overline\omega}$ を$1$ 次元的に並べなけれ
+ばならないが、そのためには $\overline\omega$ から
+$\{0,1,2,\cdots,N-1\}$ への全単射を一つ選べばよい。例えば
+%
+\[
+  \varphi(i,j):= j (N_x+1)+i
+\]
+%
+とおくと、
+%
+\[
+  \varphi\colon \overline\omega\longto \{0,1,2,\cdots,N-1\}
+\]
+%
+は全単射になる\footnote{要するに、重複も抜けもなく、
+きれいに番号が付きましたね、ということ。} (図を描いて $\varphi$ の意味を
+考えよ\footnote{$(0,0)$, $(1,0)$, $(2,0)$, $\dots$, $(N_x,0)$,
+$(0,1)$, $(1,1)$, $\dots$, $(N_x,1)$, $\dots$, $(0,N_y)$,
+$(1,N_y)$, $\dots$, $(N_x,N_y)$ に順に $0$, $1$, $\dots$, $N-1$ 
+という番号を振る。誰か \TeX\ に貼込める図を描いてくれませんか？})。ちなみに
+$\varphi$ の逆写像 $\varphi^{-1}$ は $\ell \in
+\{0,1,2,\cdots,N-1\}$ に対して
+%
+\[
+  \varphi^{-1}(\ell)=(\ell \;{\rm mod}\; (N_x+1), \ell\;{\rm div}\;(N_x+1))
+\]
+%
+となる\footnote{よく分からない場合は、
+$N_x=5$, $N_y=4$ の場合に図を描いて、
+格子点に番号 $\ell$ をふり、
+$\ell$ から $(i,j)$ がどう求まるか眺めながら考えよ。
+図を描くと簡単に分かる。最初から図を描いておけばよいようだが、
+我々はプログラムを書く必要があるので、
+やりたいことを式で表現しなければならない。}。
+ここで $a\;{\rm mod}\;b$ は $a$ を $b$ で割った余り\footnote{C 
+言語ならば {\tt a \% b} と書くところ。}、
+$a\;{\rm div}\;b$ は $a$ を $b$ で割った商\footnote{C 言語ならば、
+({\tt a}, {\tt b} が整数型の式として) 単に {\tt a / b} と書くところ。
+しかし、これは数学における {\tt /} の意味とは食い違うので、
+この C 流を採用するわけにはいかないだろう。}を表すとする\footnote{
+「$a$ を $b$ で割った商が $q$, 余りが $r$」を
+``$a\ \mathrm{div}\ b=q$, $a\ \mathrm{mod}\ b=r$'' と書くということ。
+これは $a=bq +r$, $0\le r<b$ と同値 (というよりもこれが定義)。}。
+
+\[
+  U^{n}_\ell:= U^{n}_{i,j}, \quad \ell=\varphi(i,j)
+  \qquad\mbox{($(i,j)\in\overline\omega$, $n=0,1,2,\cdots$)}
+\]
+%
+によって、$U^{n}_{\ell}$ ($0\le\ell\le N-1$, $n\ge 0$) を定めて
+%
+\[
+  \vec U^{n+1}:=\fourvector{U^{n+1}_0}{U^{n+1}_1}{\vdots}{U^{n+1}_{N-1}}
+\]
+%
+とおいて $\vec U^{n+1}\in\R^N$ を作り、
+(\ref{eq:差分方程式}), (\ref{eq:境界条件からの式}) を $\vec U^{n+1}$ につい
+ての連立$1$ 次方程式とみなそう。
+
+  $(i,j)\in\omega$ とするとき、$\ell=\varphi(i,j)$ とおくと、
+%
+\[
+  \varphi(i+1,j)=\ell+1,\quad
+  \varphi(i-1,j)=\ell-1, \quad
+  \varphi(i,j+1)=\ell+m, \quad
+  \varphi(i,j-1)=\ell-m \quad
+\]
+%
+となる。ただし $m:= N_x+1$ とした。
+これから
+\[
+  U^{n+1}_{i,j}=U^{n+1}_{\ell},\quad
+  U^{n+1}_{i+1,j}=U^{n+1}_{\ell+1},\quad
+  U^{n+1}_{i-1,j}=U^{n+1}_{\ell-1},\quad
+  U^{n+1}_{i,j+1}=U^{n+1}_{\ell+m},\quad
+  U^{n+1}_{i,j-1}=U^{n+1}_{\ell-m}.
+\]
+
+  すると、この $(i,j)$ についての (\ref{eq:差分方程式}) は、
+%
+\[
+  [1+2\theta(\lambda_x+\lambda_y)]U^{n+1}_\ell
+  -\theta[\lambda_x(U^{n+1}_{\ell+1}+U^{n+1}_{\ell-1})
+         +\lambda_y(U^{n+1}_{\ell+m}+U^{n+1}_{\ell-m})]=b_\ell^n
+\]
+%
+と表せる。ただし、
+%
+\begin{align}
+  b_\ell^n&:=\mbox{(\ref{eq:差分方程式}) の右辺} \label{eq:bの第l成分の定義}\\
+ &=[1-2(1-\theta)(\lambda_x+\lambda_y)]U^{n}_{i,j}
+  +(1-\theta)
+   [
+    \lambda_x(U^{n}_{i+1,j}+U^{n}_{i-1,j})
+   +\lambda_y(U^{n}_{i,j+1}+U^{n}_{i,j-1})
+   ]
+  \nonumber
+\end{align}
+%
+とおいた。また、この方程式は
+%
+\[
+ \begin{array}{ccccccccc}
+ (0, \cdots, 0, &-\theta\lambda_y,& 0, \cdots, 0, &-\theta\lambda_x,&
+  1+2\theta(\lambda_x+\lambda_y),& -\theta\lambda_x ,& 0, \cdots, 0,
+  &-\theta\lambda_y,&0,\cdots, 0) \vec U^{n+1} = b_\ell^n\\
+ & \uparrow & & \uparrow & \uparrow & \uparrow & & \uparrow\\
+ & \ell-m   & & \ell-1   & \ell & \ell+1 & & \ell+m
+\end{array}
+\]
+%
+と、
+%
+\begin{center}
+  横ベクトル$\times$縦ベクトル$=$実数
+\end{center}
+%
+の形にも書ける。
+
+  一方、境界条件の方は
+%
+\[
+  \alpha_\ell:= \alpha_{i,j}, \qquad \ell=\varphi(i,j)
+\]
+%
+とおくことにより、
+%
+\[
+  U^{n+1}_\ell = \alpha_\ell \quad\mbox{($\ell\in\varphi(\gamma)$)}
+\]
+%
+と表せ、
+\[
+\begin{array}{ccc}
+ (0,\cdots,0,&1,&0,\cdots,0)\vec U^{n+1} = \alpha_\ell\\
+  & \uparrow & \\
+  &   \ell &
+\end{array}
+\]
+とも書ける。
+
+  以上をまとめると
+%
+\begin{equation}\label{eq:とりあえず行列×ベクトル＝ベクトルの形}
+  A \vec U^{n+1} = \vec b
+\end{equation}
+%
+の形の方程式が立てられる。ここで $A$ は $N$ 次正方行列で、
+第 $\ell\in\varphi(\omega)$ 行は
+%
+\[
+ \begin{array}{ccccccccc}
+ (0, \cdots, 0, &-\theta\lambda_y,& 0, \cdots, 0, &-\theta\lambda_x,&
+  1+2\theta(\lambda_x+\lambda_y),& -\theta\lambda_x ,& 0, \cdots, 0,
+  &-\theta\lambda_y,&0,\cdots, 0)\\
+ & \uparrow & & \uparrow & \uparrow & \uparrow & & \uparrow\\
+ & \ell-m   & & \ell-1   & \ell & \ell+1 & & \ell+m
+\end{array}
+\]
+%
+の形で、第 $\ell\in\varphi(\gamma)$ 行は
+%
+\[
+\begin{array}{ccc}
+ (0,\cdots,0,&1,&0,\cdots,0)\\
+  & \uparrow & \\
+  &   \ell &
+\end{array}
+\]
+%
+の形になっている。また $\vec b$ は $\R^N$ の既知要素であり、第 
+$\ell\in\varphi(\omega)$ 成分は (\ref{eq:bの第l成分の定義}) で定義され
+る $b_\ell^n$ であり、第 $\ell\in\varphi(\gamma)$ 成分は $\alpha_\ell$ 
+に等しい。
+
+  (\ref{eq:とりあえず行列×ベクトル＝ベクトルの形}) の具体例を二つ示そう。
+$N_x=N_y=2$ の場合は
+%
+\[
+ \left(
+  \begin{array}{ccccccccc}
+    1 & \\
+      & 1 \\
+      &   & 1 \\
+      &   &   & 1 \\
+    0 &-\theta\lambda_y&0&-\theta\lambda_x&1+2\theta(\lambda_x+\lambda_y)&
+   -\theta\lambda_x& 0 & -\theta\lambda_y & 0 \\
+      &   &   &    &   & 1 \\
+      &   &   &    &   &  & 1 \\
+      &   &   &    &   &  &  & 1 \\
+      &   &   &    &   &  &  &  & 1
+  \end{array}
+ \right)
+ \left(
+  \begin{array}{c}
+   U_0 \\
+   U_1 \\
+   U_2 \\
+   U_3 \\
+   U_4 \\
+   U_5 \\
+   U_6 \\
+   U_7 \\
+   U_8
+  \end{array}
+ \right)
+  =
+ \left(
+  \begin{array}{c}
+   \alpha_0 \\
+   \alpha_1 \\
+   \alpha_2 \\
+   \alpha_3 \\
+   b_4 \\
+   \alpha_5 \\
+   \alpha_6 \\
+   \alpha_7 \\
+   \alpha_8
+  \end{array}
+ \right)
+\]
+%
+となる\footnote{$\omega=\{(1,1)\}$, $\varphi(\omega)=\{4\}$ であるから、
+第4行\footnote{線形代数では、行列やベクトルの成分には $1$ から番号付けす
+るが、応用上は $0$ から番号をつけるのが便利なこともあるい。
+ここでは格子点には $0$ から番号をつけているので、
+行の番号も $0$ からつけている。その場合に第4行ということ。}
+以外は境界上にある格子点に対応している。}。
+ここで $U_i$, $b_i$ は、本当はそれぞれ $U_i^{n+1}$, $b_i^n$ と書くべきだが、
+うるさいので右肩の $n+1$, $n$ は省略した。
+最初の行を $0$ 番と数えるとき、
+第 $4$ 行のみが $\theta$, $\lambda_x$, $\lambda_y$ の登場する行になって
+いるが、
+これは $4$ 番目の格子点だけが、
+内部に属する格子点であること (つまり $\varphi(\omega)
+=\{4\}$) から明らかである。
+
+\begin{figure}[htbp]
+\begin{center}
+\setlength{\unitlength}{1mm}
+\begin{picture}(60,60)(0,0)
+\put(10,10){\line(1,0){40}}
+\put(10,10){\line(0,1){40}}
+\put(50,10){\line(0,1){40}}
+\put(10,50){\line(1,0){40}}
+\put(10,30){\line(1,0){40}}
+\put(30,10){\line(0,1){40}}
+\put(7,6){$0$}\put(27,6){$1$}\put(47,6){$2$}
+\put(7,26){$3$}\put(27,26){$4$}\put(47,26){$5$}
+\put(7,46){$6$}\put(27,46){$7$}\put(47,46){$8$}
+\end{picture}
+\caption{$N_x=2$, $N_y=2$ の場合の $\varphi(i,j)$}
+\end{center}
+\end{figure}
+
+  また $N_x=N_y=3$ の場合は
+%
+\[
+  \beta_0=1+2\theta(\lambda_x+\lambda_y),
+  \quad
+  \beta_1=-\theta\lambda_x,
+  \quad
+  \beta_2=-\theta\lambda_y
+\]
+%
+とおくと、
+%
+\[
+ \left(
+  \begin{array}{cccccccccccccccc}
+   1 \\
+    &1 \\
+    & &1 \\
+    & & &1 \\
+    & & & &1 \\
+    &\beta_2& & &\beta_1&\beta_0&\beta_1& & &\beta_2\\
+    &       &\beta_2& & &\beta_1&\beta_0&\beta_1& & &\beta_2\\
+    & & & & & & & 1\\
+    & & & & & & & &1\\
+    & & & & &\beta_2& & &\beta_1&\beta_0&\beta_1& & &\beta_2\\
+    & & & & &&\beta_2& & &\beta_1&\beta_0&\beta_1& & &\beta_2\\
+    & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & & & & 1\\
+  \end{array}
+ \right)
+ \left(
+  \begin{array}{c}
+   U_0 \\
+   U_1 \\
+   U_2 \\
+   U_3 \\
+   U_4 \\
+   U_5 \\
+   U_6 \\
+   U_7 \\
+   U_8 \\
+   U_9 \\
+   U_{10} \\
+   U_{11} \\
+   U_{12} \\
+   U_{13} \\
+   U_{14} \\
+   U_{15}
+  \end{array}
+ \right)
+  =
+ \left(
+  \begin{array}{c}
+   \alpha_0 \\
+   \alpha_1 \\
+   \alpha_2 \\
+   \alpha_3 \\
+   \alpha_4 \\
+   b_5 \\
+   b_6 \\
+   \alpha_7 \\
+   \alpha_8 \\
+   b_9 \\
+   b_{10} \\
+   \alpha_{11} \\
+   \alpha_{12} \\
+   \alpha_{13} \\
+   \alpha_{14} \\
+   \alpha_{15}
+  \end{array}
+ \right)
+\]
+%
+となる\footnote{$\omega=\{(1,1),(2,1),(1,2),(2,2)\}$, $\varphi(\omega)
+=\{5,6,9,10\}$ である。}。
+
+\begin{figure}[htbp]
+\begin{center}
+\setlength{\unitlength}{1mm}
+\begin{picture}(70,70)(0,0)
+\put(10,10){\line(1,0){60}}
+\put(10,10){\line(0,1){60}}
+\put(30,10){\line(0,1){60}}
+\put(50,10){\line(0,1){60}}
+\put(70,10){\line(0,1){60}}
+\put(10,30){\line(1,0){60}}
+\put(10,50){\line(1,0){60}}
+\put(10,70){\line(1,0){60}}
+\put(7,6){$0$}\put(27,6){$1$}\put(47,6){$2$}\put(67,6){$3$}
+\put(7,26){$4$}\put(27,26){$5$}\put(47,26){$6$}\put(67,26){$7$}
+\put(7,46){$8$}\put(26,46){$9$}\put(46,46){$10$}\put(66,46){$11$}
+\put(6,66){$12$}\put(26,66){$13$}\put(46,66){$14$}\put(66,66){$15$}
+\end{picture}
+\caption{$N_x=3$, $N_y=3$ の場合の $\varphi(i,j)$}
+\end{center}
+\end{figure}
+
+  これ以外の場合にも、このように連立$1$ 次
+方程式 (\ref{eq:とりあえず行列×ベクトル＝ベクトルの形}) を
+組み立てることは容易である。
+
+  しかし、問題はこれで終ったわけではない。まず
+\begin{center}
+  \textbf{
+  連立 $1$ 次
+方程式 (\ref{eq:とりあえず行列×ベクトル＝ベクトルの形}) は一意に解けるか?}
+\end{center}
+幸い、この問に対する答は Yes. なぜならば、
+この方程式の係数行列は狭義の優対角行列であるから\footnote{$|\beta_0|
+-2|\beta_1|-2|\beta_2|=1>0$.}
+正則である (『応用数学』第7章「発展系の数値解析」 \cite{桂田FDM0} で、
+空間 $1$ 次元の場合の差分方程式の場合に同様の論法を用いた)。
+
+\subsection{対称な連立 $1$ 次方程式への変形}
+
+\begin{center}
+  \textbf{
+  連立 $1$ 次
+方程式 (\ref{eq:とりあえず行列×ベクトル＝ベクトルの形}) を
+どうやって解くか?}
+\end{center}
+%
+という問題が残っている。上の方程式の係数行列を見ると、ほとんど
+\footnote{$N_x$, $N_y$ が大きいとき、$\sharp\omega\gg\sharp\gamma$.}の行は
+\[
+ (0 \cdots 0 \;\beta_2\;0\cdots0\;\beta_1\;\beta_0\;\beta_1\;0\cdots
+ 0\;\beta_2\;0\cdots0)
+\]
+%
+であるから、「対称行列に近い」ことが分かる。連立$1$ 次方程式や固有値問題
+においては
+%
+\begin{center}
+  \textbf{
+  対称な問題は、対称な問題向けの手法を用いて、効率的に解くべきである}
+\end{center}
+%
+という鉄則がある\footnote{「対称な問題を解くのは science であるが、非
+対称な問題を解くのは art である」という言葉がある。}。実はもともとの偏
+微分方程式の初期値境界値問題 (\ref{eq:二次元熱伝導方程式}), 
+(\ref{eq:二次元ディリクレ境界条件}), (\ref{eq:二次元初期条件}) は
+対称な問題である
+ため、離散化して得られた連立 $1$ 次
+方程式 (\ref{eq:とりあえず行列×ベクトル＝ベクトルの形}) も「ほとんど
+対称」になったのである。ここは頑張って、
+方程式 (\ref{eq:とりあえず行列×ベクトル＝ベクトルの形}) に修正を加え
+て、(完全な) 対称行列を係数とする連立 $1$ 次方程式に書き換えるべきである。
+
+  一般的な話をする前に、$N_x=N_y=3$ の場合で論じよう。
+%
+\[
+ \left(
+  \begin{array}{cccccccccccccccc}
+   1 \\
+    &1 \\
+    & &1 \\
+    & & &1 \\
+    & & & &1 \\
+ &\framebox{$\beta_2$}& & &\framebox{$\beta_1$}&\beta_0&\beta_1& & &\beta_2\\
+ &&\framebox{$\beta_2$}& & &\beta_1&\beta_0&\framebox{$\beta_1$}& & &\beta_2\\
+    & & & & & & & 1\\
+    & & & & & & & &1\\
+ &&&&&\beta_2&&&\framebox{$\beta_1$}&\beta_0&\beta_1&&&\framebox{$\beta_2$}\\
+ &&&&&&\beta_2&&&\beta_1&\beta_0&\framebox{$\beta_1$}&&&\framebox{$\beta_2$}\\
+    & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & & & & 1
+  \end{array}
+ \right)
+ \left(
+  \begin{array}{c}
+   U_0 \\
+   U_1 \\
+   U_2 \\
+   U_3 \\
+   U_4 \\
+   U_5 \\
+   U_6 \\
+   U_7 \\
+   U_8 \\
+   U_9 \\
+   U_{10} \\
+   U_{11} \\
+   U_{12} \\
+   U_{13} \\
+   U_{14} \\
+   U_{15}
+  \end{array}
+ \right)
+  =
+ \left(
+  \begin{array}{c}
+   \alpha_0 \\
+   \alpha_1 \\
+   \alpha_2 \\
+   \alpha_3 \\
+   \alpha_4 \\
+   b_5 \\
+   b_6 \\
+   \alpha_7 \\
+   \alpha_8 \\
+   b_9 \\
+   b_{10} \\
+   \alpha_{11} \\
+   \alpha_{12} \\
+   \alpha_{13} \\
+   \alpha_{14} \\
+   \alpha_{15}
+  \end{array}
+ \right)
+\]
+%
+において \framebox{　} でくくった成分は、
+相棒 (対角線に関して対称の位置にある成分) が $0$ であるのに、
+自分自身は $0$ でないので、対称性を壊していると言える。ところが、
+この成分とかけあわせる $U_\ell$ は実は境界値に対応しているので、
+既知である。これを利用するため、上の方程式を
+%
+\[
+ \left(
+  \begin{array}{cccccccccccccccc}
+   1 \\
+    &1 \\
+    & &1 \\
+    & & &1 \\
+    & & & &1 \\
+ && & &&\beta_0&\beta_1& & &\beta_2\\
+ && & & &\beta_1&\beta_0&& & &\beta_2\\
+    & & & & & & & 1\\
+    & & & & & & & &1\\
+ &&&&&\beta_2&&&&\beta_0&\beta_1&&&\\
+ &&&&&&\beta_2&&&\beta_1&\beta_0&&&&\\
+    & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & & & 1\\
+    & & & & & & & & & & & & & & & 1
+  \end{array}
+ \right)
+ \left(
+  \begin{array}{c}
+   U_0 \\
+   U_1 \\
+   U_2 \\
+   U_3 \\
+   U_4 \\
+   U_5 \\
+   U_6 \\
+   U_7 \\
+   U_8 \\
+   U_9 \\
+   U_{10} \\
+   U_{11} \\
+   U_{12} \\
+   U_{13} \\
+   U_{14} \\
+   U_{15}
+  \end{array}
+ \right)
+  =
+ \left(
+  \begin{array}{c}
+   \alpha_0 \\
+   \alpha_1 \\
+   \alpha_2 \\
+   \alpha_3 \\
+   \alpha_4 \\
+   b_5 \\
+   b_6 \\
+   \alpha_7 \\
+   \alpha_8 \\
+   b_9 \\
+   b_{10} \\
+   \alpha_{11} \\
+   \alpha_{12} \\
+   \alpha_{13} \\
+   \alpha_{14} \\
+   \alpha_{15}
+  \end{array}
+ \right)
+  -
+ \left(
+  \begin{array}{c}
+   0 \\
+   0 \\
+   0 \\
+   0 \\
+   0 \\
+   \beta_2 U_1+\beta_1 U_4 \\
+   \beta_2 U_2+\beta_1 U_7 \\
+   0 \\
+   0 \\
+   \beta_1 U_8+\beta_2 U_{13} \\
+   \beta_1 U_{11}+\beta_2 U_{14} \\
+   0 \\
+   0 \\
+   0 \\
+   0 \\
+   0
+  \end{array}
+ \right)
+\]
+のように変形する\footnote{この部分の操作を、
+方程式の左辺の項を右辺に移項したものであると説明してきたが、
+ある学生に (拡大係数行列の) 「基本変形」と言われた。
+なるほど、そうも言えるし、その方が分かりやすいかもしれない。}。
+これはめでたく対称な方程式になった! 右辺は実は
+%
+\[
+ \left(
+  \begin{array}{c}
+   \alpha_0 \\
+   \alpha_1 \\
+   \alpha_2 \\
+   \alpha_3 \\
+   \alpha_4 \\
+   b_5 \\
+   b_6 \\
+   \alpha_7 \\
+   \alpha_8 \\
+   b_9 \\
+   b_{10} \\
+   \alpha_{11} \\
+   \alpha_{12} \\
+   \alpha_{13} \\
+   \alpha_{14} \\
+   \alpha_{15}
+  \end{array}
+ \right)
+  -
+ \left(
+  \begin{array}{c}
+   0 \\
+   0 \\
+   0 \\
+   0 \\
+   0 \\
+   \beta_2 \alpha_1+\beta_1 \alpha_4 \\
+   \beta_2 \alpha_2+\beta_1 \alpha_7 \\
+   0 \\
+   0 \\
+   \beta_1 \alpha_8+\beta_2 \alpha_{13} \\
+   \beta_1 \alpha_{11}+\beta_2 \alpha_{14} \\
+   0 \\
+   0 \\
+   0 \\
+   0 \\
+   0
+  \end{array}
+ \right)
+\]
+であり、既知の値からすぐに計算できることに注意しよう。
+
+  以上の操作を一般的に論じよう。$(i,j)\in\overline\omega$ として、
+$\ell=\varphi(i,j)$ とおく。
+\begin{enumerate}
+\item
+  $(i,j)\in\gamma$ の場合は $\ell$ 番目の方程式は
+%
+\[
+  U_\ell=\alpha_\ell
+\]
+%
+であるから、これは対角成分以外は $0$ なので書き換えの必要はない。
+%
+\item
+  $(i,j)\in\omega$ としよう。対応する差分方程式は
+\[
+  \beta_2 U_{\ell-m}
+ +\beta_1 U_{\ell-1}
+ +\beta_0 U_{\ell}
+ +\beta_1 U_{\ell+1}
+ +\beta_2 U_{\ell+m}
+ =
+ b_\ell
+\]
+である。
+つまり $A$ の $(p,q)$ 成分を $a_{p q}$ とするとき、
+\begin{equation}\label{eq:変形前の第l行}
+ \sum_{q=0}^{N-1} a_{\ell q} U_q = b_\ell,
+\end{equation}
+ただし
+\begin{eqnarray*}
+  a_{\ell,\ell-m}&=&\beta_2,
+ \quad
+  a_{\ell,\ell-1}=\beta_1,
+ \quad
+  a_{\ell,\ell}=\beta_0,
+ \quad
+  a_{\ell,\ell+1}=\beta_1,
+ \quad
+  a_{\ell,\ell+m}=\beta_2, \\
+  a_{\ell,q}&=&0 \quad\mbox{($q\ne \ell-m,\ell-1,\ell,\ell+1,\ell+m$)}
+\end{eqnarray*}
+である。non-zero 成分
+  $a_{\ell,\ell-m}$, 
+  $a_{\ell,\ell-1}$, 
+  $a_{\ell,\ell}$, 
+  $a_{\ell,\ell+1}$, 
+  $a_{\ell,\ell+m}$
+と対称な位置にある成分をチェックする。
+\begin{enumerate}
+\item
+  $a_{\ell,\ell-m}=a_{\ell-m,\ell}$ か?
+$a_{\ell-m,\ell}=a_{\ell-m,(\ell-m)+m}$ であるから、
+これは $\ell-m\in\varphi(\omega)$ か?という条件で置き換えられる。
+(もし $\ell-m\in\varphi(\omega)$ ならば $a_{\ell-m,(\ell-m)+m}=\beta_2
+=a_{\ell,\ell-m}$.)
+%
+\item 
+  $a_{\ell,\ell-1}=a_{\ell-1,\ell}$ か?
+$a_{\ell-1,\ell}=a_{\ell-1,(\ell-1)+1}$ であるから、
+これは $\ell-1\in\varphi(\omega)$ か?という条件で置き換えられる。
+(もし $\ell-1\in\varphi(\omega)$ ならば $a_{\ell-1,(\ell-1)+1}=\beta_1
+=a_{\ell,\ell-1}$.)
+%
+\item
+  $a_{\ell,\ell}=a_{\ell,\ell}$ は当り前。
+\item 
+  $a_{\ell,\ell+1}=a_{\ell+1,\ell}$ か?
+$a_{\ell+1,\ell}=a_{\ell+1,(\ell+1)-1}$ であるから、
+これは $\ell+1\in\varphi(\omega)$ か?という条件で置き換えられる。
+\item 
+  $a_{\ell,\ell+m}=a_{\ell+m,\ell}$ か?
+$a_{\ell+m,\ell}=a_{\ell+m,(\ell+m)-m}$ であるから、
+これは $\ell+m\in\varphi(\omega)$ か?という条件で置き換えられる。
+\end{enumerate}
+  言い換えると、$(i,j)\in\omega$ について、
+\begin{enumerate}
+\item
+  $(i,j)$ の左右上下 $(i\pm1,j)$,
+$(i,j\pm1)$ がやはり $\omega$ に含まれている場合
+(直観的には $(i,j)$ が $\gamma$ から離れている場合)、
+第 $\ell =\varphi(i,j)$ 行は何も書き換える必要はない。
+\item
+  $(i,j)$ の左右上下 $(i\pm1,j)$, $(i,j\pm1)$ の少なくとも一つが 
+$\omega$ に含まれない ($\gamma$ に含まれる) 場合は\footnote{格子点で言うと、
+境界から1段ずれているところにあるものである。}、
+対称性を崩している要素があるので、
+第 $\ell =\varphi(i,j)$ 行は書き換えが必要である。
+以下の 4 つの条件は排反というわけではないことに注意。
+\begin{enumerate}
+\item
+  $j=1$ の場合、$(i,j-1)\in\gamma$, すなわち 
+$\ell-m\in\varphi(\gamma)$ なので
+\[
+  a_{\ell,\ell-m}=\beta_2, \quad a_{\ell-m,\ell}=0
+\]
+そこで (\ref{eq:変形前の第l行}) において、 $a_{\ell,\ell-m}
+U_{\ell-m}$ を右辺に移項する。
+%
+\item
+  $i=1$ の場合、$(i-1,j)\in\gamma$, すなわち 
+$\ell-1\in\varphi(\gamma)$ なので
+\[
+  a_{\ell,\ell-1}=\beta_1, \quad a_{\ell-1,\ell}=0
+\]
+そこで (\ref{eq:変形前の第l行}) において、$a_{\ell,\ell-1}U_{\ell-1}$ 
+を右辺に移項する。
+%
+\item
+  $i=N_x-1$ の場合、$(i+1,j)\in\gamma$, すなわち 
+$\ell+1\in\varphi(\gamma)$ なので
+\[
+  a_{\ell,\ell+1}=\beta_1, \quad a_{\ell+1,\ell}=0
+\]
+そこで (\ref{eq:変形前の第l行}) において、 $a_{\ell,\ell+1}U_{\ell+1}$ 
+を右辺に移項する。
+%
+\item
+  $j=N_y-1$ の場合、$(i,j+1)\in\gamma$, すなわち 
+$\ell+m\in\varphi(\gamma)$ なので
+\[
+  a_{\ell,\ell+m}=\beta_2, \quad a_{\ell+m,\ell}=0
+\]
+そこで (\ref{eq:変形前の第l行}) において、 $a_{\ell,\ell+m} U_{\ell+m}$ 
+を右辺に移項する。
+\end{enumerate}
+\end{enumerate}
+\end{enumerate}
+
+\subsection{連立1次方程式を組み立てる手順のまとめ}
+
+  前節までに説明した手順をまとめておこう\footnote{アルゴリズムの紹介には
+プログラムを使うな、という意見も根強いが、読みやすく書けば構わないだろう。}。
+実際にコンパイルして動くプログラムのソースを掲げる
+\footnote{\url{https://m-katsurada.sakura.ne.jp/program/} から
+入手可能である。}。
+ここに掲げるプログラムは説明用であって、
+大変に素朴な書き方をしている (実行効率に大きな問題がある)。
+係数行列が\Ruby{おび}{帯}行列 (band matrix) であることを
+まったく利用していない。
+
+\begin{jremark}[\texttt{decomp()}, \texttt{solve()} について]
+  以下に紹介するプログラムのいくつかで \texttt{decomp()},
+\texttt{solve()} という関数を用いている。
+それぞれ行列を LU 分解するための関数と LU 分解を利用して連立1次方程式を
+解くための関数である。
+Forsythe and Moler の著書のプログラムを参考にして作成したものである。
+代替物で置き換えた方がよいでしょうか… \qed
+\end{jremark}
+
+\begin{jremark}[安定性条件]
+  $\theta$ 法の安定性条件は、1次元とほとんど同様に
+\[
+  \lambda\le\frac{1}{2(1-\theta)}
+\]
+であることが証明できる (後述)。ただし
+\[
+ \lambda:=\lambda_x+\lambda_y,\quad
+ \lambda_x:=\frac{\tau}{h_x^2},\quad
+ \lambda_x:=\frac{\tau}{h_y^2}.
+\]
+  $\tau$ について解くと
+\[
+ \tau\le\frac{1}{2(1-\theta)}\times
+  \left(\frac{1}{h_x^2}+\frac{1}{h_y^2}\right)^{-1}
+\]
+となる。 \qed
+\end{jremark}
+
+{\footnotesize
+\verbatimlisting{heat-fdm-1-progs/heat2d-i-naive.c}
+}
+%
+\begin{itembox}{入手＆コンパイル (cglsc が必要)}
+\begin{verbatim}
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/heat2d-i-naive.c
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/smallmatrix.h
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/lu.c
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/lu.h
+cglsc heat2d-i-naive.c lu.c
+./heat2d-i-naive
+\end{verbatim}
+  色々尋ねられるが、例えば
+\begin{verbatim}
+Nx, Ny: 50 50
+θ (0≦θ≦1): 0.5
+τ(≦0.0002≡最大値ノルムに関する安定性条件を満たすτの上限): 0.0001
+λ=0.5
+備考: 1+2θλ= 1.5, -θλx= -0.1, -θλy= -0.1
+Tmax: 1
+Δt: 0.001
+\end{verbatim} 
+(動作チェック: 2024/8/22)
+\end{itembox}
+
+\subsection{係数行列が帯行列であることを利用したプログラム}
+
+(ここは記録として残しておくが、中途半端なので読むときはカットして構わない。)
+
+  『Gauss の消去法と LU 分解』の章で紹介した帯行列向け LU 分解用関数
+\texttt{bandlu()}, \texttt{bandsol()} を利用するサンプル・プログラム
+\url{https://m-katsurada.sakura.ne.jp/program/fdm/heat2d-i-band3.c} を
+紹介しておく (プログラム・リストは省略)。
+
+\begin{itembox}{入手＆コンパイル (cglsc が必要)}
+\begin{verbatim}
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/heat2d-i-band3.c
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/smallmatrix.h
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/luband3.c
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/luband3.h
+cglsc heat2d-i-band3.c luband3.c
+\end{verbatim}
+(動作チェック: 2024/8/22)
+\end{itembox}
+
+  実はこの熱方程式を解くプログラムはさらに改良が可能である。
+それは差分方程式の係数行列が対称であることをまだ利用していないからである。
+
+\subsection{境界上の格子点における値を未知数に含めないプログラム}
+\label{subsec:境界上の格子点での値を未知数としないプログラム}
+
+(\ref{sec:非同次ディリクレ}「非同次 Dirichlet 境界条件」を見ることを勧める。)
+
+  境界上の格子点における値 $U_{ij}^n$ ($(i,j)\in\gamma$) 
+も未知数として方程式に組み込んだが、これは境界条件からすぐに分るので、
+これを除いた連立1次方程式を立てることもできる。それには、
+  $U^n=\{U^n_{i,j}\}_{(i,j)\in\omega}$ を$1$ 次元
+的に並べなければならないが、そのためには $\omega$ から
+$\{0,1,2,\cdots,N'-1\}$ への全単射を一つ選べばよい ($N':= 
+(N_x-1)(N_y-1)$)。例えば
+%
+\[
+  \psi(i,j):= (j-1)(N_x-1)+i-1
+\]
+%
+とおくと、
+%
+\[
+  \psi\colon\omega\longto \{0,1,2,\cdots,N'-1\}
+\]
+%
+は全単射になる。逆写像は $\ell \in \{0,1,2,\cdots,N'-1\}$ に対して
+%
+\[
+  \psi^{-1}(\ell)=(\ell \;{\rm mod}\; (N_x-1)+1, \ell\;{\rm div}\;(N_x-1)+1)
+\]
+%
+となる。この $\psi$ を用いて
+%
+\[
+ U^n_\ell:= U^n_{i,j}, \quad \ell=\psi(i,j)\quad
+ \mbox{($(i,j)\in\omega$, $n=0,1,2,\cdots$)}
+\]
+%
+によって $U^n_\ell$ を定めて、
+%
+\[
+  \vec U^n:=
+  \left(
+   \begin{array}{c}
+    U^n_0\\ U^n_1 \\ \vdots \\ U^n_{N'-1}
+   \end{array}
+  \right)
+\]
+%
+とおく。今度は
+%
+\[
+  m':= N_x-1
+\]
+%
+とおくと、$\ell=\psi(i,j)$ とするとき、
+%
+\[
+ \psi(i+1,j)=\ell+1,\quad
+ \psi(i-1,j)=\ell-1,\quad
+ \psi(i,j+1)=\ell+m',\quad
+ \psi(i,j-1)=\ell-m'
+\]
+%
+となる。これを用いて
+\[
+ \beta_2 U_{i,j-1}^{n+1}
+ +\beta_1 U_{i-1,j}^{n+1}
+ +\beta_0 U_{i,j}^{n+1}
+ +\beta_1 U_{i+1,j}^{n+1}
+ +\beta_2 U_{i,j+1}^{n+1}=b_{\ell}
+ \quad\mbox{($1\le i\le N_x-1$, $1\le j\le N_y-1$)}
+\]
+を書き換えることになる。
+
+  結局、連立1次方程式は以下のようになる。
+\[
+ A \vec U^{n+1}=\vec b^ n+\vec c^n.
+\]
+%
+ここで
+%
+{\footnotesize
+%
+\begin{align*}
+ A&=\left(
+ \begin{array}{cccc|cccc|cccc|cccc}
+  \beta_0&\beta_1&  &  &\beta_2&  &  &  &  &  &  &  &  &  &  &  \\
+  \beta_1&\ddots&\ddots&  &  &\beta_2&  &  &  &  &  &  &  &  &  &  \\
+    &\ddots&  &\beta_1&  &  &\ddots&  &  &  &  &  &  &  &  &  \\
+    &  &\beta_1&\beta_0&  &  &  &\beta_2&  &  &  &  &  &  &  &  \\
+  \hline
+  \beta_2&  &  &  &\ddots&  &  &  &\ddots&  &  &  &  &  &  &  \\
+    &\beta_2&  &  &  &\ddots&  &  &  &\ddots&  &  &  &  &  &  \\
+    &  &\ddots&  &  &  &\ddots&  &  &  &\ddots&  &  &  &  &  \\
+    &  &  &\beta_2&  &  &  &\ddots&  &  &  &\ddots&  &  &  &  \\
+  \hline
+    &  &  &  &\ddots&  &  &  &\ddots&  &  &  &\beta_2&  &  &  \\
+    &  &  &  &  &\ddots&  &  &  &\ddots&  &  &  &\beta_2&  &  \\
+    &  &  &  &  &  &\ddots&  &  &  &\ddots&  &  &  &\ddots&  \\
+    &  &  &  &  &  &  &\ddots&  &  &  &\ddots&  &  &  &\beta_2\\
+  \hline
+    &  &  &  &  &  &  &  &\beta_2&  &  &  &\beta_0&\beta_1&  &  \\
+    &  &  &  &  &  &  &  &  &\beta_2&  &  &\beta_1&\ddots&\ddots&  \\
+    &  &  &  &  &  &  &  &  &  &\ddots&  &  &\ddots&  &\beta_1\\
+    &  &  &  &  &  &  &  &  &  &  &\beta_2&  &  &\beta_1&\beta_0
+ \end{array}
+ \right),\\
+  \vec b^n&=(b_0,b_1,\dots,b_{N'-1})^T.
+\end{align*}
+}%
+また $\vec c^n=(c^n_0,c^n_1,\dots,c^n_{N'-1})^T$ は、
+最初に $\vec c^n=\vec 0$ としておいてから、
+以下の (1)〜(4) を行って計算できる。
+%
+\begin{enumerate}[(1)]
+\item $\ell=\psi(i,1)$ ($1\le i\le N_x-1$) に対して
+\[
+ c^n_\ell \leftarrow c^n_\ell - \beta_2 \alpha_{i,0}.
+\]
+\item $\ell=\psi(i,N_y-1)$ ($1\le i\le N_x-1$) に対して
+\[
+ c^n_\ell \leftarrow c^n_\ell - \beta_2 \alpha_{i,N_y}.
+\]
+\item $\ell=\psi(1,j)$ ($1\le j\le N_y-1$) に対して
+\[
+ c^n_\ell \leftarrow c^n_\ell - \beta_1 \alpha_{0,j}.
+\]
+\item $\ell=\psi(N_x-1,j)$ ($1\le j\le N_y-1$) に対して
+\[
+ c^n_\ell \leftarrow c^n_\ell - \beta_1 \alpha_{N_x,j}.
+\]
+\end{enumerate}
+
+$N_x=N_y=3$ の場合は、
+\[
+\left(
+ \begin{array}{cc|cc}
+  \beta_0 & \beta_1 & \beta_2 &   0      \\
+  \beta_1 & \beta_0 &  0      & \beta_2  \\
+  \hline
+  \beta_2 & 0 & \beta_0 & \beta_1  \\
+    0     & \beta_2 & \beta_1 & \beta_0  \\
+\end{array}
+\right)
+ \left(
+  \begin{array}{c}
+   U_0 \\ U_1 \\ U_2 \\ U_3
+  \end{array}
+ \right)
+\]
+
+\textcolor{red}{以下手書きノートの内容を書き足すつもり。}
+(と書いたけれど、ノートはどこかに行ってしまった。)
+
+\ifリストたくさん
+  以下、サンプル・プログラムを掲示する。
+
+{\footnotesize
+ \verbatimlisting{heat2d/heat2d-i-naive2.c}
+}
+\else
+  サンプル・プログラム
+\begin{center}
+\url{https://m-katsurada.sakura.ne.jp/program/fdm/heat2d-i-naive2.c}
+\end{center}
+を公開している。
+\fi
+
+\begin{itembox}{コンパイルの仕方 (cglsc が必要)}
+\begin{verbatim}
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/heat2d-i-naive2.c
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/smallmatrix.h
+curl -O https://m-katsurada.sakura.ne.jp/program/linear/lu.c
+curl -O https://m-katsurada.sakura.ne.jp/program/linear/lu.h
+cglsc heat2d-i-naive2.c lu.c
+\end{verbatim}
+(動作チェック: 2024/8/22)
+\end{itembox}
+
+$A$ の各ブロックは $m'=N_x-1$ 次の正方行列で、それが縦横ともに $N_y-1$ 個並んでいる。
+ゆえに
+%
+\begin{equation}
+ A=
+  \left(
+   \begin{array}{ccccc}
+     A' &   \beta_2I    &\\
+     \beta_2I  &   A'   & \beta_2I  \\
+        & \ddots & \ddots & \ddots & \\
+        &        & \beta_2 I &   A'      & \beta_2 I\\
+        &        &           & \beta_2 I & A'
+    \end{array}
+  \right),
+  \quad
+   A'=
+  \left(
+   \begin{array}{ccccc}
+     \beta_0 & \beta_1 & \\
+     \beta_1 & \beta_0 & \beta_1\\
+             & \ddots & \ddots  &\ddots \\
+             &        &  \beta_1 & \beta_0 & \beta_1\\
+             &        &          & \beta_1 & \beta_0
+  \end{array}
+  \right).
+  \label{eq:境界上の格子点における値を未知数に含めない方程式の係数行列}
+\end{equation}
+%
+
+\begin{itembox}[l]{\textbf{実行結果 (係数行列に注目)}}
+\tiny
+\verbatimfile{heat2d/heat2d-i-naive2.out}
+(動作チェック: 2024/8/22)
+\end{itembox}
+
+\subsection{Kronecker 積を使った表現}
+\label{subsec:クロネッカー積を使った表現}
+
+  前項に現われた係数行列 $A$ は、
+行列の Kronecker 積\footnote{Kronecker 積について、
+例えば伊理 \cite{伊理1} を見よ。}を用いると簡潔に書けることを示そう。
+
+\[
+ m'=N_x-1,\quad \ell'=N_y-1, \quad N=(N_x-1)(N_y-1)
+\]
+とおく。
+
+(\ref{eq:境界上の格子点における値を未知数に含めない方程式の係数行列}) に
+おける $A$ は、
+%
+\[
+ a=\theta\lambda_x,\quad b=\theta\lambda_y
+\]
+%
+とおくと、次のようになる:
+%
+{\scriptsize
+\newcommand{\e}{1+2(a+b)}
+\newcommand{\f}{\ddots}
+%
+\[
+ \left(
+ \begin{array}{cccc|cccc|cccc|cccc}
+  \e&-a&  &  &-b&  &  &  &  &  &  &  &  &  &  &  \\
+  -a&\f&\f&  &  &-b&  &  &  &  &  &  &  &  &  &  \\
+    &\f&  &-a&  &  &\f&  &  &  &  &  &  &  &  &  \\
+    &  &-a&\e&  &  &  &-b&  &  &  &  &  &  &  &  \\
+  \hline
+  -b&  &  &  &\f&  &  &  &\f&  &  &  &  &  &  &  \\
+    &-b&  &  &  &\f&  &  &  &\f&  &  &  &  &  &  \\
+    &  &\f&  &  &  &\f&  &  &  &\f&  &  &  &  &  \\
+    &  &  &-b&  &  &  &\f&  &  &  &\f&  &  &  &  \\
+  \hline
+    &  &  &  &\f&  &  &  &\f&  &  &  &-b&  &  &  \\
+    &  &  &  &  &\f&  &  &  &\f&  &  &  &-b&  &  \\
+    &  &  &  &  &  &\f&  &  &  &\f&  &  &  &\f&  \\
+    &  &  &  &  &  &  &\f&  &  &  &\f&  &  &  &-b\\
+  \hline
+    &  &  &  &  &  &  &  &-b&  &  &  &\e&-a&  &  \\
+    &  &  &  &  &  &  &  &  &-b&  &  &-a&\ddots&\f&  \\
+    &  &  &  &  &  &  &  &  &  &\f&  &  &\f&  &-a\\
+    &  &  &  &  &  &  &  &  &  &  &-b&  &  &-a&\e
+ \end{array}
+ \right)
+\]
+}
+となる。
+各ブロックは $m'=N_x-1$ 次の正方行列で、それが縦横ともに $\ell'=N_y-1$ 個並んでいる。
+
+  $k\in\N$ に対して、
+\[
+ I_k=\mbox{$k$次単位行列},\quad
+ O_k=\mbox{$k$次零行列},\quad
+ J_k=\left(
+      \begin{array}{cccc}
+        0 &  1   &      &   \\
+        1 &  0   &\ddots&   \\
+          &\ddots&\ddots& 1 \\
+          &      &   1  & 0
+      \end{array}
+     \right)\in \R^{k\times k}
+\]
+%
+と書くことにすると、
+%
+\[
+ A=
+ \left[1+2\theta(\lambda_x+\lambda_y)\right]I_{m'\ell'}
+ -\theta\lambda_x
+ \left(
+  \begin{array}{cccc}
+    J_{m'} &     &  &  \\
+        & J_{m'} &  &  \\
+        &     &\ddots&  \\
+        &     &  & J_{m'}
+  \end{array}
+ \right)
+ -\theta\lambda_y
+ \left(
+  \begin{array}{cccc}
+   O_{m'} &  I_{m'} &      &    \\
+   I_{m'} &  O_{m'} &\ddots&    \\
+       &\ddots&\ddots& I_{m'}\\
+       &      &  I_{m'} & O_{m'}
+  \end{array}
+ \right)
+\]
+%
+と書ける。
+
+  Kronecker 積の記法を用いると
+%
+\[
+ A=
+ \left[1+2\theta(\lambda_x+\lambda_y)\right]I_{\ell' m'}
+ -\theta\lambda_x I_{\ell'}\otimes J_{m'}
+ -\theta\lambda_y J_{\ell'}\otimes I_{m'},
+\]
+%
+あるいは ($I_{\ell' m'}=I_{\ell'}\otimes I_{m'}$ であるので)
+%
+\[
+ A=
+ \left[1+2\theta(\lambda_x+\lambda_y)\right]I_{\ell'}\otimes I_{m'}
+ -\theta\lambda_x I_{\ell'}\otimes J_{m'}
+ -\theta\lambda_y J_{\ell'}\otimes I_{m'}.
+\]
+
+  $\ell'$, $m'$ よりも $N_x$, $N_y$ が見えた方が良いかもしれない。
+\[
+ A=
+ \left[1+2\theta(\lambda_x+\lambda_y)\right]I_{N_y-1}\otimes I_{N_x-1}
+ -\theta\lambda_x I_{N_y-1}\otimes J_{N_x-1}
+ -\theta\lambda_y J_{N_y-1}\otimes I_{N_x-1}.
+\]
+
+
+\paragraph{観察}
+\begin{itemize}
+\item 
+  大部分の行は $0$ でない成分が $5$ 個ある。こういう行は上下左右の格子点が
+領域内部に含まれている格子点 $(x_i,y_j)$ に対応している。
+%
+\item
+  対角線の両隣は大部分が $-\theta\lambda_x$ であるが、
+左右いずれかの格子点が境界に属するような格子点に対応する行については、
+境界に対応するところに $0$ が現われる。
+%
+\item
+  対角線から $m$ だけ離れたところは、$-\theta\lambda_y$ となる。
+これは例外がない。意外なようだが、上下いずれかの格子点が境界に属するよう
+な行は行列の上と下の部分で、対応する成分が行列の外に出てしまうのである。
+\end{itemize}
+
+上は、$\ell=\psi(i,j)=(j-1)(N_x-1)+i-1$ という番号づけを行った場合であるが、
+$\ell=(i-1)(N_y-1)+j-1$ という番号づけを行った場合には
+\[
+ A=
+ \left[1+2\theta(\lambda_x+\lambda_y)\right]I_{N_x-1}\otimes I_{N_y-1}
+ -\theta\lambda_x J_{N_x-1}\otimes I_{N_y-1}
+ -\theta\lambda_y I_{N_x-1}\otimes J_{N_y-1}
+\]
+となる (Kronecker積の順序が変わっただけである)。
+
+\medskip
+
+MATLAB には Kronecker 積を計算する \texttt{kron()} という命令があり、
+それを用いると $A$ を作るのは簡単である。
+しかし工夫をしないと効率の高いプログラムにはならないであろう。
+(2024/8/22加筆: これを書いたときから、
+MATLABの利用についてもそれなりに経験を積んでいて、
+\texttt{kron()} を利用して大丈夫と考えるようになっている。
+すでに別文書を公開中である
+(桂田 \cite{桂田熱ディリクレMALTAB},
+\cite{桂田熱ディリクレ非同次MALTAB},
+\cite{桂田熱ノイマンMALTAB},
+\cite{桂田熱ノイマン非同次MALTAB})。
+そのうち、こちらの記述を直すかもしれない。)
+
+\subsubsection{3次元の場合}
+
+``2次元と同様にして''、
+直方体 $[a,b]\times[c,d]\times[e,f]$を $N_x\times N_y
+\times N_z$ 等分するとき、
+\[
+ k':=N_z-1,\quad h_z:=\frac{f-e}{N_z},\quad \lambda_z:=\frac{\tau}{h_z^2}
+\]
+とおくと、連立1次方程式の係数行列は
+\[
+ A=\left[1+2\theta(\lambda_x+\lambda_y+\lambda_z)\right]I_k\otimes
+ I_\ell\otimes I_m
+ -\theta\lambda_x I_{k'}\otimes I_\ell\otimes J_m
+ -\theta\lambda_y I_{k'}\otimes J_\ell\otimes I_m
+ -\theta\lambda_z J_{k'}\otimes I_\ell\otimes I_m.
+\]
+
+ただし、格子点 $(x_i,y_j,z_k)$ を $1$ 次元的に並べるときの番号づけを
+\[
+ \psi(i,j,k)=(i-1)+(j-1)(N_x-1)+(k-1)(N_x-1)(N_y-1)
+\]
+とする (おっと、$k$ という字がだぶった…そのため片方を $k'$ としてあります。
+$i$, $j$ と $\ell$, $m$ だったのを $i$, $j$, $k$ と $k'$, $\ell$, $m$
+とした訳です)。
+
+\medskip
+
+  Kronecker 積による表現の応用として、
+\S\ref{節:ADI法の安定性の解析} 「ADI法の安定性解析」と
+\S\ref{節:θ法の安定性解析} 「$\theta$法の安定性解析」をあげておく。
+
+\subsection{対称帯行列向けLU分解の利用 \texttt{heat2d-i.c} (このレベルで一番効率的なプログラム)}%
+
+\S\ref{subsec:境界上の格子点での値を未知数としないプログラム},
+\S\ref{subsec:クロネッカー積を使った表現} の $A=(a_{ij})$ は、
+対称かつ半バンド幅が $m$, すなわち
+\[
+ |i-j|>m\quad\Then\quad a_{ij}=0
+\]
+となる行列である。
+
+以下に掲げるのは、
+『連立1次方程式 I』 (桂田 \cite{桂田数値線形代数1}) の 5.8 節で紹介した 
+\texttt{symbandlu.c}\footnote{実対称帯行列を係数とする連立1次方程式を
+解くための関数の \texttt{symbandlu()}, \texttt{synbandsolv()} がある。}
+を利用したプログラム \texttt{heat2d-i.c} である。
+
+\begin{itembox}{コンパイルの仕方 (cglsc が必要)}
+\begin{verbatim}
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/heat2d-i.c
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/smallmatrix.h
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/symbandlu.c
+curl -O https://m-katsurada.sakura.ne.jp/program/fdm/symbandlu.h
+cglsc heat2d-i.c symbandlu.c
+\end{verbatim}
+  このプログラムは効率的なので、Nx, Ny を大きくしても十分なスピードで動く。
+\begin{verbatim}
+Nx, Ny: 100 100
+θ (0≦θ≦1): 0.5
+τ(≦5e-05≡最大値ノルムに関する安定性条件を満たすτの上限): 0.0001
+注意: λ=2>1/2(1-θ) となっています。
+備考: 1+2θλ= 3.0, -θλx= -0.5, -θλy= -0.5
+Tmax: 1
+Δt: 0.005
+\end{verbatim}
+(動作チェック: 2024/8/22)
+\end{itembox}%
+
+\begin{itembox}{駆け足で \texttt{symbandlu.c} の説明}
+  詳しくは、桂田  \cite{桂田数値線形代数1} を見てもらいたいが、
+要点を二つほど書いておく。
+\begin{enumerate}
+\item
+  すべての首座小行列式の値が $0$ でない行列 $A$ は、
+単位下三角行列 $L$ と上三角行列 $U$ の積  $A=L U$ として表されるが、
+$A$ が対称である場合、
+$L=(\ell_{ij})$ の対角線より下の成分は
+\[
+ \ell_{ji}=u_{ij}/u_{ii}
+\]
+により簡単に求められるので、
+$L$ を計算したり、ましてや記憶しておく必要はない。
+%
+\item
+  行列 $A=(a_{ij})$ が半バンド幅 $m$ である、すなわち
+\[
+  |i-j|>m\quad\Then\quad a_{ij}=0
+\]
+を満たし、さらに対称である場合、$a_{ij}$ ($1\le i\le n$;
+$i\le j\le i+m$) だけ記憶しておけば十分である。
+そこで $n$ 行 $m+1$ 列の行列 $A'=(a'_{ij})$ ($1\le i\le n$, $0\le j\le
+  m$) を
+\[
+  a_{ij}=a'_{i,j-i}
+\]
+で定め、この $A'$ を記憶すればよい。
+\end{enumerate}
+\end{itembox}
+
+\paragraph{\tt heat2d-i.c}
+{\footnotesize
+\verbatimlisting{heat-fdm-1-progs/heat2d-i.c}
+}
+
+このプログラム (と {\tt symbandlu.c} など) も以下のページから入手できる。
+%
+\begin{center}
+  \url{https://m-katsurada.sakura.ne.jp/program/fdm/}
+\end{center}
+%
+
+\subsection{MATLABプログラム}
+
+MATLAB プログラムを作ってある。
+そのうち、この文書とマージするつもりであるが、
+現在は別文書にしてある。
+
+桂田
+\cite{桂田熱ディリクレMALTAB} (2015),
+\cite{桂田熱ディリクレ非同次MALTAB} (2024),
+\cite{桂田熱ノイマン非同次MALTAB} (2024)
+を見よ。それぞれ同次Ditichlet境界条件の場合、
+非同次Ditichlet境界条件の場合、
+非同次Neumann境界条件の場合を説明してある。
+
+この問題は一応解決した。
+
+\section{Neumann 境界条件の場合}
+
+  Dirichlet 境界条件の代りに Neumann 境界条件を課した
+初期値境界値問題を考えよう。
+
+\subsection{境界条件の設定}
+
+Neumann境界値 $\frac{\rd u}{\rd n}$ は、
+長方形領域$\Omega=(a,b)\times(c,d)$の4つの角点
+($(a,c)$, $(a,d)$, $(b,c)$, $(b,d)$)
+においては普通の意味では定義されない。
+以下では、解 $u$ が領域の閉包 $\overline{\Omega}$ で$C^1$級
+(すなわち、$u$ が $\overline{\Omega}$ のある開近傍まで $C^1$ 級に拡張できる)
+と仮定して、
+角点において $\frac{\rd u}{\rd x}$,
+$\frac{\rd u}{\rd y}$ が分かっている場合に近似解を求めることにする。
+
+もともと $\frac{\rd u}{\rd x}(a,y)$ ($y\in(c,d)$),
+$\frac{\rd u}{\rd x}(b,y)$ ($y\in(c,d)$),
+$\frac{\rd u}{\rd y}(x,c)$ ($x\in(a,b)$),
+$\frac{\rd u}{\rd y}(x,d)$ ($x\in(a,b)$)
+は(角点以外の点における $\frac{\rd u}{\rd n}$であるから)与えられているので、
+その極限が分かるというのは不自然な仮定ではないであろう。
+
+せっかくだから、境界条件が時間に依存するように一般化しよう。
+\[
+ -\frac{\rd u}{\rd x}(a,y,t), \frac{\rd u}{\rd x}(b,y,t)
+ \quad\text{($c\le y\le d$, $t\ge 0$)},
+\]
+\[
+ -\frac{\rd u}{\rd y}(x,c,t), \frac{\rd u}{\rd y}(x,d,t)
+ \quad\text{($a\le x\le b$, $t\ge 0$)}
+\]
+を計算する関数
+(それぞれ \texttt{b\_l(x,y,t)},  \texttt{b\_r(x,y,t)}, 
+ \texttt{b\_b(x,y,t)},  \texttt{b\_t(x,y,t)} と名付ける)
+が与えられているとする。
+
+角点以外の $\rd\Omega$ の点 $(x,y)$ と $t\ge 0$ に対して
+\[
+ \Phi(x,y,t):=
+ \left\{
+ \begin{array}{ll}
+  \text{b\_l}(x,y,t) & \text{($x=a$, $c<y<d$)}\\
+  \text{b\_r}(x,y,t) & \text{($x=b$, $c<y<d$)}\\
+  \text{b\_b}(x,y,t) & \text{($y=c$, $a<x<b$)}\\
+  \text{b\_t}(x,y,t) & \text{($y=d$, $a<x<b$)}
+ \end{array}
+ \right.
+\]
+とおく。いわゆる Neumann 境界値である。
+
+\subsection{差分方程式の導出}
+
+%
+さて、
+\[
+ \alpha=-\theta\lambda_x,\quad
+ \beta =-\theta\lambda_y,\quad
+ \gamma=1+2\theta(\lambda_x+\lambda_y),
+\]
+\[
+ \alpha'=(1-\theta)\lambda_x,\quad
+ \beta' =(1-\theta)\lambda_y,\quad
+ \gamma'=1-2(1-\theta)(\lambda_x+\lambda_y),
+\]
+%
+とおくと、熱方程式を差分近似して出来た差分方程式は、
+%
+\begin{align}
+ & \gamma U^{n+1}_{i,j}
+ +\alpha(U^{n+1}_{i+1,j}+U^{n+1}_{i-1,j})
+ +\beta (U^{n+1}_{i,j+1}+U^{n+1}_{i,j-1}) \label{eq:差分方程式再掲}\\
+ &\qquad=
+  \gamma' U^{n}_{i,j}
+ +\alpha'(U^{n}_{i+1,j}+U^{n}_{i-1,j})
+ +\beta' (U^{n}_{i,j+1}+U^{n}_{i,j-1})
+  \notag
+\end{align}
+%
+表せる。この式に仮想格子点における値が現れる場合に、
+境界条件を用いてそれを消去することを考える。
+%
+\begin{enumerate}[(1)]
+\item (長方形の左辺に注目している格子点がある場合, 角点は除く)
+  $i=0$, $1\le j\le N_y-1$ のとき
+\begin{align*}
+ &\frac{U^{n+1}_{1,j}-U^{n+1}_{-1,j}}{2h_x}
+    =\frac{\rd u}{\rd x}(x_0,y_j,t_{n+1})=-\Phi(x_0,y_j,t_{n+1}),\\
+ &\frac{U^{n}_{1,j}-U^{n}_{-1,j}}{2h_x}
+    =\frac{\rd u}{\rd x}(x_0,y_j,t_n)=-\Phi(x_0,y_j,t_{n})
+\end{align*}
+%
+より
+%
+\[
+ U^{n+1}_{-1,j}=U^{n+1}_{1,j}+2h_x\Phi_{0,j}^{n+1},\quad
+ U^{n  }_{-1,j}=U^{n  }_{1,j}+2h_x\Phi_{0,j}^{n}.
+\]
+%
+これらを差分方程式 (\ref{eq:差分方程式再掲}) に代入して
+%
+\begin{eqnarray*}
+ && \gamma U^{n+1}_{0,j}
+ +\alpha(U^{n+1}_{1,j}+U^{n+1}_{1,j}+2h_x\Phi_{0,j}^{n+1})
+ +\beta (U^{n+1}_{0,j+1}+U^{n+1}_{0,j-1})\\
+ &&\qquad=
+  \gamma' U^{n}_{0,j}
+ +\alpha'(U^{n}_{1,j}+U^{n}_{1,j}+2h_x\Phi_{0,j}^n)
+ +\beta' (U^{n}_{0,j+1}+U^{n}_{0,j-1})
+\end{eqnarray*}
+%
+整理すると
+%
+\begin{align*}
+  &\gamma U^{n+1}_{0,j}
+ +2\alpha U^{n+1}_{1,j}
+ +\beta (U^{n+1}_{0,j+1}+U^{n+1}_{0,j-1})\\
+&\qquad =
+  \gamma' U^{n}_{0,j}
+ +2\alpha'U^{n}_{1,j}
+ +\beta' (U^{n}_{0,j+1}+U^{n}_{0,j-1})
+ +2h_x\left[\alpha'\Phi_{0,j}^n-\alpha\Phi_{0,j}^{n+1}\right].
+\end{align*}
+以下のプログラムでは、係数行列を対称にするために、
+この方程式の両辺に$\frac{1}{2}$をかけた次の方程式を用いている。
+\begin{align*}
+ & \frac{\gamma}{2} U^{n+1}_{0,j}
+ +\alpha U^{n+1}_{1,j}
+ +\frac{\beta}{2}(U^{n+1}_{0,j+1}+U^{n+1}_{0,j-1})\\
+ &\qquad =
+ \frac{\gamma'}{2} U^{n}_{0,j}
+ +\alpha'U^{n}_{1,j}
+ +\frac{\beta'}{2} (U^{n}_{0,j+1}+U^{n}_{0,j-1})
+ +h_x\left[\alpha'\Phi_{0,j}^n-\alpha\Phi_{0,j}^{n+1}\right].
+\end{align*}
+%
+\item (長方形の右辺に注目している格子点がある場合, 角点は除く)
+ $i=N_x$, $1\le j\le N_y-1$ のとき。
+%
+\begin{align*}
+ &\frac{U^{n+1}_{N_x+1,j}-U^{n+1}_{N_x-1,j}}{2h_x}
+  =\frac{\rd u}{\rd x}(x_{N_x},y_j,t_{n+1})=\Phi_{N_x,j}^{n+1},\\
+ &\frac{U^{n}_{N_x+1,j}-U^{n}_{N_x-1,j}}{2h_x}
+ =\frac{\rd u}{\rd x}(x_{N_x},y_j,t_{n+1})=\Phi_{N_x,j}^{n}
+\end{align*}
+%
+より
+%
+\[
+ U^{n+1}_{N_x+1,j}=U^{n+1}_{N_x-1,j}+2h_x\Phi_{N_x,j}^{n+1},\quad
+ U^{n  }_{N_x+1,j}=U^{n  }_{N_x-1,j}+2h_x\Phi_{N_x,j}^{n}.
+\]
+%
+これらを差分方程式 (\ref{eq:差分方程式再掲}) に代入して
+%
+\begin{eqnarray*}
+ && \gamma U^{n+1}_{N_x,j}
+ +\alpha(U^{n+1}_{N_x-1,j}+U^{n+1}_{N_x-1,j}+2h_x\Phi_{N_x,j}^{n+1})
+ +\beta (U^{n+1}_{N_x,j+1}+U^{n+1}_{N_x,j-1})\\
+ &&\qquad=
+  \gamma' U^{n}_{N_x,j}
+ +\alpha'(U^{n}_{N_x-1,j}+U^{n}_{N_x-1,j}+2h_x\Phi_{N_x,j}^n)
+ +\beta' (U^{n}_{N_x,j+1}+U^{n}_{N_x,j-1})
+\end{eqnarray*}
+%
+整理すると
+%
+\begin{eqnarray*}
+ && \gamma U^{n+1}_{N_x,j}
+ +2\alpha U^{n+1}_{N_x-1,j}
+ +\beta (U^{n+1}_{N_x,j+1}+U^{n+1}_{N_x,j-1})\\
+ &&\qquad=
+  \gamma' U^{n}_{N_x,j}
+ +2\alpha'U^{n}_{N_x-1,j}
+ +\beta' (U^{n}_{N_x,j+1}+U^{n}_{N_x,j-1})
+ +2h_x\left[\alpha'\Phi_{N_x,j}^{n}-\alpha\Phi_{N_x,j}^{n+1}\right].
+\end{eqnarray*}
+両辺に $\dfrac{1}{2}$ をかけて
+%%%%%
+\begin{align*}
+ &\frac{\gamma}{2} U^{n+1}_{N_x,j}
+ +\alpha U^{n+1}_{N_x-1,j}
+ +\frac{\beta}{2} (U^{n+1}_{N_x,j+1}+U^{n+1}_{N_x,j-1})\\
+ &\qquad=
+  \frac{\gamma'}{2} U^{n}_{N_x,j}
+ +\alpha'U^{n}_{N_x-1,j}
+ +\frac{\beta'}{2} (U^{n}_{N_x,j+1}+U^{n}_{N_x,j-1})
+ +h_x\left[\alpha'\Phi_{N_x,j}^{n}-\alpha\Phi_{N_x,j}^{n+1}\right].
+\end{align*}
+\item (長方形の下辺に注目している格子点がある場合, 角点は除く)
+ $j=0$, $1\le i\le N_x-1$ のとき。
+\begin{align*}
+ &\frac{U^{n+1}_{i,1}-U^{n+1}_{i,-1}}{2h_y}
+  =\frac{\rd u}{\rd y}(x_i,y_0,t_{n+1})=-\Phi_{i,0}^{n+1},\\
+ &\frac{U^{n  }_{i,1}-U^{n  }_{i,-1}}{2h_y}
+  =\frac{\rd u}{\rd y}(x_i,y_0,t_n)=-\Phi_{i,0}^{n}
+\end{align*}
+%
+より
+%
+\[
+ U^{n+1}_{i,-1}=U^{n+1}_{i,1}+2h_y\Phi_{i,0}^{n+1},\quad
+ U^{n  }_{i,-1}=U^{n  }_{i,1}+2h_y\Phi_{i,0}^{n}.
+\]
+%
+これらを差分方程式  (\ref{eq:差分方程式再掲}) に代入して
+%
+\begin{eqnarray*}
+ && \gamma U^{n+1}_{i,0}
+ +\alpha (U^{n+1}_{i+1,0}+U^{n+1}_{i-1,0})
+ +\beta(U^{n+1}_{i,1}+U^{n+1}_{i,1}+2h_y\Phi_{i,0}^{n+1})\\
+ &&\qquad=
+  \gamma' U^{n}_{i,0}
+ +\alpha' (U^{n}_{i+1,0}+U^{n}_{i-1,0})
+ +\beta'(U^{n}_{i,1}+U^{n}_{i,1}+2h_y\Phi_{i,0}^n)
+\end{eqnarray*}
+%
+整理すると
+%
+\begin{align*}
+ & \gamma U^{n+1}_{i,0}
+ +\alpha (U^{n+1}_{i+1,0}+U^{n+1}_{i-1,0})
+ +2\beta U^{n+1}_{i,1}\\
+ &\qquad=
+  \gamma' U^{n}_{i,0}
+ +\alpha' (U^{n}_{i+1,0}+U^{n}_{i-1,0})
+ +2\beta' U^{n}_{i,1}
++2h_y(\beta'\Phi_{i,0}^n-\beta\Phi_{i,0}^{n+1}).
+\end{align*}
+%
+両辺に$\dfrac{1}{2}$ をかけて
+\begin{align*}
+ & \frac{\gamma}{2} U^{n+1}_{i,0}
+ +\frac{\alpha}{2} (U^{n+1}_{i+1,0}+U^{n+1}_{i-1,0})
+ +\beta U^{n+1}_{i,1}\\
+ &\qquad=
+  \frac{\gamma'}{2} U^{n}_{i,0}
+ +\frac{\alpha'}{2} (U^{n}_{i+1,0}+U^{n}_{i-1,0})
+ +\beta' U^{n}_{i,1}
++h_y(\beta'\Phi_{i,0}^n-\beta\Phi_{i,0}^{n+1}).
+\end{align*}
+%
+\item (長方形の上辺に注目している格子点がある場合, 角点は除く)
+  $j=N_y$, $1\le i\le N_x-1$ のとき。
+%
+\[
+ \frac{U^{n+1}_{i,N_y+1}-U^{n+1}_{i,N_y-1}}{2h_y}
+  =\frac{\rd u}{\rd y}(x_i,y_{N_y},t_{n+1})=\Phi_{i,N_y}^{n+1},
+  \quad
+ \frac{U^{n}_{i,N_y+1}-U^{n}_{i,N_y-1}}{2h_y}=\Phi_{i,N_y}^{n}
+\]
+%
+より
+%
+\[
+ U^{n+1}_{i,N_y+1}=U^{n+1}_{i,N_y-1}+2h_y\Phi_{i,N_y}^{n+1},\quad
+ U^{n  }_{i,N_y+1}=U^{n  }_{i,N_y-1}+2h_y\Phi_{i,N_y}^{n}.
+\]
+%
+これらを差分方程式  (\ref{eq:差分方程式再掲}) に代入して
+%
+\begin{eqnarray*}
+ && \gamma U^{n+1}_{i,N_y}
+ +\alpha(U^{n+1}_{i+1,N_y}+U^{n+1}_{i-1,N_y})
+ +\beta (U^{n+1}_{i,N_y-1}+U^{n+1}_{i,N_y-1}+2h_y\Phi_{i,N_y}^{n+1})\\
+ &&\qquad=
+ \gamma' U^{n}_{i,N_y}
+ +\alpha'(U^{n}_{i+1,N_y}+U^{n}_{i-1,N_y})
+ +\beta' (U^{n}_{i,N_y-1}+U^{n}_{i,N_y-1}+2h_y\Phi_{i,N_y}^{n})
+\end{eqnarray*}
+%
+整理すると
+%
+\begin{eqnarray*}
+ && \gamma U^{n+1}_{i,N_y}
+ +\alpha(U^{n+1}_{i+1,N_y}+U^{n+1}_{i-1,N_y})
+ +2\beta U^{n+1}_{i,N_y-1}\\
+ &&\qquad=
+ \gamma' U^{n}_{i,N_y}
+ +\alpha'(U^{n}_{i+1,N_y}+U^{n}_{i-1,N_y})
+ +2\beta' U^{n}_{i,N_y-1}
+ +2h_y[\beta'\Phi_{i,N_y}^{n}-\beta\Phi_{i,N_y}^{n+1}].
+\end{eqnarray*}
+%
+両辺に $\dfrac{1}{2}$ をかけて
+\begin{align*}
+ & \frac{\gamma}{2} U^{n+1}_{i,N_y}
+ +\frac{\alpha}{2}(U^{n+1}_{i+1,N_y}+U^{n+1}_{i-1,N_y})
+ +\beta U^{n+1}_{i,N_y-1}\\
+ &\qquad=
+ \frac{\gamma'}{2} U^{n}_{i,N_y}
+ +\frac{\alpha'}{2}(U^{n}_{i+1,N_y}+U^{n}_{i-1,N_y})
+ +\beta' U^{n}_{i,N_y-1}
+ +h_y[\beta'\Phi_{i,N_y}^{n}-\beta\Phi_{i,N_y}^{n+1}].
+\end{align*}
+%
+\end{enumerate}
+
+\begin{itembox}{仮想格子点での値をどう表すか}
+\quad
+  自分自身が混乱して、符号を間違えたこともあったので、
+補足的な注意を述べておく。
+外向き単位法線方向の微分の意味を思い出せば
+\[
+  U_{\text{仮想格子点}}
+ =U_{\text{内側の格子点}}+2h\frac{\rd u}{\rd n}(\text{境界上の格子点})
+\]
+が成立することが納得できるはず。
+\end{itembox}
+
+以下、角の点での差分方程式を検討する。
+
+\paragraph{左下の角点}
+\[
+ \frac{\rd u}{\rd x}(x_0,y_0,t_n)
+ \kinji\frac{u^n_{1,0}-u^n_{-1,0}}{2h_x}
+ \quad\text{より}\quad
+  U^n_{-1,0}=U^n_{1,0}+2h_x\texttt{b\_l}(x_0,y_0,t_n),
+\]
+\[
+ \frac{\rd u}{\rd y}(x_0,y_0,t_n)
+ \kinji\frac{u^n_{0,1}-u^n_{0,-1}}{2h_y}
+ \quad\text{より}\quad
+  U^n_{0,-1}=U^n_{0,1}+2h_y\texttt{b\_b}(x_0,y_0,t_n)
+\]
+のような近似がしたい。
+
+差分方程式
+\[
+ \gamma U^{n+1}_{i,j}+\alpha(U^{n+1}_{i+1,j}+U^{n+1}_{i-1,j})
+  +\beta(U^{n+1}_{i,j+1}+U^{n+1}_{i,j-1})
+=
+ \gamma' U^{n}_{i,j}+\alpha'(U^{n}_{i+1,j}+U^{n}_{i-1,j})
+  +\beta'(U^{n}_{i,j+1}+U^{n}_{i,j-1})
+\]
+を、$i=0$, $j=0$ では次のように変形する。
+\begin{align*}
+  &\gamma U^{n+1}_{x_0,y_0}
+  +\alpha(U^{n+1}_{1,0}+U^{n+1}_{1,0}+2h_x\texttt{b\_l}(x_0,y_0,t_{n+1}))
+  +\beta(U^{n+1}_{0,1}+U^{n+1}_{0,1}+2h_y\texttt{b\_b}(x_0,y_0,t_{n+1}))\\
+  &\quad=
+  \gamma' U^{n}_{x_0,y_0}
+  +\alpha'(U^{n}_{1,0}+U^{n}_{1,0}+2h_x\texttt{b\_l}(x_0,y_0,t_n))
+  +\beta'(U^{n}_{0,1}+U^{n}_{0,1}+2h_y\texttt{b\_b}(x_0,y_0,t_n))
+\end{align*}
+\begin{align*}
+  &\gamma U^{n+1}_{x_0,y_0}
+  +2\alpha U^{n+1}_{1,0}+2h_x\alpha\texttt{b\_l}(x_0,y_0,t_{n+1})
+  +2\beta U^{n+1}_{0,1}+2h_y\beta\texttt{b\_b}(x_0,y_0,t_{n+1})\\
+  &\quad=\gamma' U^{n}_{x_0,y_0}
+  +2\alpha'U^{n}_{1,0}+2h_x\alpha'\texttt{b\_l}(x_0,y_0,t_n)
+  +2\beta'U^{n}_{0,1}+2h_y\beta'\texttt{b\_b}(x_0,y_0,t_n)
+\end{align*}
+\begin{align*}
+  &\gamma U^{n+1}_{x_0,y_0}+2\alpha U^{n+1}_{1,0}+2\beta U^{n+1}_{0,1}
+  =\gamma' U^{n}_{x_0,y_0}+2\alpha'U^{n}_{1,0}+2\beta'U^{n}_{0,1}\\
+  &\qquad
+   +2h_x(\alpha'\texttt{b\_l}(x_0,y_0,t_n)-\alpha\texttt{b\_l}(x_0,y_0,t_{n+1}))
+   +2h_y(\beta'\texttt{b\_b}(x_0,y_0,t_n)-\beta\texttt{b\_b}(x_0,y_0,t_{n+1}))
+\end{align*}
+\begin{screen}
+\begin{verbatim}
+        L = phi(0,0); x = a; y = c;
+        B[L] = gamma_p * Uk[0][0]
+             + 2 * alpha_p * Uk[1][0] + 2 * beta_p * Uk[0][1]
+             + 2h_x * (alpha_p * b_l(x,y,tn) - alpha * b_l(x,y,tnp1))
+             + 2h_y * (beta_p * b_b(x,y,tn) - beta * b_b(x,y,tnp1));
+\end{verbatim}
+\end{screen}
+
+\paragraph{左上の角点}
+\[
+ \frac{\rd u}{\rd x}(x_0,y_{N_y},t_n)
+ \kinji\frac{u^n_{1,N_y}-u^n_{-1,N_y}}{2h_x}
+ \quad\text{より}\quad
+  U^n_{-1,N_y}=U^n_{1,N_y}+2h_x\texttt{b\_l}(x_0,y_{N_y},t_n),
+\]
+\[
+ \frac{\rd u}{\rd y}(x_0,y_{N_y},t_n)
+ \kinji\frac{u^n_{0,N_y+1}-u^n_{0,N_y-1}}{2h_y}
+ \quad\text{より}\quad
+  U^n_{0,N_y+1}=U^n_{0,N_y-1}+2h_y\texttt{b\_t}(x_0,y_{N_y},t_n)
+\]
+差分方程式を$i=0$, $j=N_y$ では次のように変形する。
+\begin{align*}
+  &\gamma U^{n+1}_{0,N_y}
+  +\alpha(U^{n+1}_{1,N_y}+U^{n+1}_{1,N_y}+2h_x\texttt{b\_l}(x_0,y_{N_y},t_{n+1}))
+  +\beta(U^{n+1}_{0,N_y-1}+U^{n+1}_{0,N_y-1}+2h_y\texttt{b\_t}(x_0,y_{N_y},t_{n+1}))\\
+  &\quad=
+  \gamma' U^{n}_{0,N_y}
+  +\alpha'(U^{n}_{1,N_y}+U^{n}_{1,N_y}+2h_x\texttt{b\_l}(x_0,y_{N_y},t_n))
+  +\beta'(U^{n}_{0,N_y-1}+U^{n}_{0,N_y-1}+2h_y\texttt{b\_t}(x_0,y_{N_y},t_n))
+\end{align*}
+\begin{align*}
+  &\gamma U^{n+1}_{0,N_y}+2\alpha U^{n+1}_{1,N_y}+2\beta U^{n+1}_{0,N_y-1}
+  =\gamma' U^{n}_{0,N_y}+2\alpha' U^{n}_{1,N_y}+2\beta' U^{n}_{0,N_y-1}\\
+  &\qquad
+  +2h_x(\alpha'\texttt{b\_l}(x_0,y_{N_y},t_{n})
+         -\alpha\texttt{b\_l}(x_0,y_{N_y},t_{n+1}))
+  +2h_y(\beta'\texttt{b\_t}(x_0,y_{N_y},t_{n})
+         -\beta\texttt{b\_t}(x_0,y_{N_y},t_{n+1}))
+\end{align*}
+\begin{screen}
+\begin{verbatim}
+        L = phi(0,N_y); x = a; y = d;
+        B[L] = gamma_p * Uk[0][N_y]
+             + 2 * alpha_p * Uk[1][N_y] + 2 * beta_p * Uk[0][N_y - 1]
+             + 2 * h_x * (alpha_p * b_l(x,y,tn) - alpha * b_l(x,y,tnp1))
+             + 2 * h_y * (beta_p * b_t(x,y,tn) - beta * b_t(x,y,tnp1));
+
+\end{verbatim}
+\end{screen}
+
+\paragraph{右下の角点}\quad
+\begin{screen}
+\begin{verbatim}
+        L = phi(N_x,0); x = b; y = c;
+        B[L] = gamma_p * Uk[N_x][0]
+             + 2 * alpha_p * Uk[N_x - 1][0] + 2 * beta_p * Uk[N_x][1]
+             + 2 * h_x * (alpha_p * b_r(x,y,tn) - alpha * b_r(x,y,tnp1))
+             + 2 * h_y * (beta * b_b(x,y,tn) - beta_p * b_b(x,y,tnp1));
+\end{verbatim}
+\end{screen}
+
+\paragraph{右上の角点}\quad
+\begin{screen}
+\begin{verbatim}
+        L = phi(N_x,N_y); x = b; y = d;
+        B[L] = gamma_p * Uk[N_x][N_y]
+             + 2 * alpha_p * Uk[N_x - 1][N_y] + 2 * beta_p * Uk[N_x][N_y - 1]
+             + 2 * h_x * (alpha_p * b_r(x,y,tn) - alpha * b_r(x,y,tnp1))
+             + 2 * h_y * (beta_p * b_t(x,y,tn) - beta * b_t(x,y,tnp1));
+\end{verbatim}
+\end{screen}
+
+以下に紹介するプログラムでは、
+係数行列が対称であるように連立1次方程式を修正している
+\footnote{どのように修正すればよいかは、1998 年度卒研学生の深石君が卒業レポート課題中で解決してくれた。}。
+
+\subsection{係数行列の対称化の操作について (いくつかの行に$1/2$, $1/4$ をかける理由)}
+
+差分方程式 (\ref{eq:差分方程式再掲}) において、
+仮想格子点での値を内側の格子点での値を用いて表すことで消去すると、
+係数が変化する。
+その方程式を行列表示した場合に、
+係数行列の各成分が消去前と比較して何倍になったかを表示すると、
+次のようになる。
+{\scriptsize
+\[
+ \left(
+ \begin{array}{ccccc|ccccc|ccccc|ccccc|ccccc}
+  1 & 2 &   & &  & \textcolor{red}{2}& &&&&&&&&&&&&&&&&&&\\
+  1 & 1 & 1 & &  &  & \textcolor{red}{2} &&&&&&&&&&&&&&&&&&\\
+    &\ddots&\ddots&\ddots& & & & \textcolor{red}{\ddots}&&&&&&&&&&&&&&&&& \\
+    &         & 1 & 1 & 1 & & & & \textcolor{red}{\ddots} & &&&&&&&&&&&&&&& \\
+    &         &   & 2 & 1 & & & & & \textcolor{red}{2} &&&&&&&&&&&&&&&\\
+  \hline
+  1 & & & &   & 1 & 2 & & & &  1 & & &&&&&&&&&&&&\\
+  & 1 & & &     & 1 & 1 & 1 & & & & 1 &&&&&&&&&&&&&\\ 
+    &   & \ddots & & & &  \ddots & \ddots & \ddots&&&&\ddots&&&&&&&&&&&& \\
+    &   &         & 1 & & & & 1 & 1 & 1  &&&&1&&&&&&&&&&&\\
+    &   &         &   & 1 & & & & 2 & 1 & &&&&1&&&&&&&&&&\\
+\hline
+   &&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&&&&\\
+   &&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&&&\\
+   &&&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&&\\
+   &&&&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&\\
+   &&&&&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&\\
+\hline
+  &&&&&&&&&&1&&&&&1&2&&&&1&&&&\\
+  &&&&&&&&&&&1&&&&1&1&1&&&&1&&&\\
+  &&&&&&&&&&&&\ddots&&&&\ddots&\ddots&\ddots&&&&\ddots&&\\ 
+  &&&&&&&&&&&&&1&&&&1&1&1&&&&1&\\
+  &&&&&&&&&&&&&&1&&&&2&1& &&&&1 \\
+\hline 
+  &&&&&&&&&&&&&&&\textcolor{red}{2}&&&&&1&2&&& \\
+  &&&&&&&&&&&&&&&&\textcolor{red}{\ddots}&&&&1&1&1&& \\
+  &&&&&&&&&&&&&&&&&\textcolor{red}{\ddots}&&&&\ddots&\ddots&\ddots& \\
+  &&&&&&&&&&&&&&&&&&\textcolor{red}{2}&&&& 1 & 1& 1 \\
+  &&&&&&&&&&&&&&&&&&&\textcolor{red}{2}&&&& 2 & 1 \\
+\end{array}
+\right).
+\]
+}
+対称行列に近いが、
+対角線に関して対称の位置にある成分と等しくないもの
+(2倍になっているもの)が少数存在している。
+
+\medskip
+
+まず、赤い部分の$2$を$1$にするために、最初の$N_x+1$行と、
+最後の$N_x+1$行を$1/2$倍すると
+ (方程式に$1/2$をかける操作に相当する --- 右辺にも$1/2$をかければ、
+同値変形となる)、次のようになる。
+{\scriptsize
+\[
+ \left(
+ \begin{array}{ccccc|ccccc|ccccc|ccccc|ccccc}
+  1/2 &\textcolor{red}{1} &   & &  & 1& &&&&&&&&&&&&&&&&&&\\
+  1/2 & 1/2 & 1/2 & &  &  & 1 &&&&&&&&&&&&&&&&&&\\
+    &\ddots&\ddots&\ddots& & & & {\ddots}&&&&&&&&&&&&&&&&& \\
+    &         & 1/2 &1/2&1/2& & & & {\ddots} & &&&&&&&&&&&&&&& \\
+    &         &   &\textcolor{red}{1} & 1/2 & & & & & 1 &&&&&&&&&&&&&&&\\
+  \hline
+  1 & & & &   & 1 &\textcolor{red}{2} & & & &  1 & & &&&&&&&&&&&&\\
+  & 1 & & &     & 1 & 1 & 1 & & & & 1 &&&&&&&&&&&&&\\ 
+    &   & \ddots & & & &  \ddots & \ddots & \ddots&&&&\ddots&&&&&&&&&&&& \\
+    &   &         & 1 & & & & 1 & 1 & 1  &&&&1&&&&&&&&&&&\\
+    &   &         &   & 1 & & & & \textcolor{red}{2} & 1 & &&&&1&&&&&&&&&&\\
+\hline
+   &&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&&&&\\
+   &&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&&&\\
+   &&&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&&\\
+   &&&&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&\\
+   &&&&&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&\\
+\hline
+  &&&&&&&&&&1&&&&&1&\textcolor{red}{2}&&&&1&&&&\\
+  &&&&&&&&&&&1&&&&1&1&1&&&&1&&&\\
+  &&&&&&&&&&&&\ddots&&&&\ddots&\ddots&\ddots&&&&\ddots&&\\ 
+  &&&&&&&&&&&&&1&&&&1&1&1&&&&1&\\
+  &&&&&&&&&&&&&&1&&&&\textcolor{red}{2}&1& &&&&1 \\
+\hline 
+  &&&&&&&&&&&&&&&{1}&&&&&1/2&\textcolor{red}{1}&&& \\
+  &&&&&&&&&&&&&&&&{\ddots}&&&&1/2&1/2&1/2&& \\
+  &&&&&&&&&&&&&&&&&{\ddots}&&&&\ddots&\ddots&\ddots& \\
+  &&&&&&&&&&&&&&&&&&1&&&& 1/2 & 1/2& 1/2 \\
+  &&&&&&&&&&&&&&&&&&&1&&&& \textcolor{red}{1} & 1/2 \\
+\end{array}
+\right)
+\]
+}
+
+この行列の対角ブロック以外の部分は対称である。対角ブロックには2種類ある。
+最初と最後の対角ブロックは
+\[
+ \begin{pmatrix}
+   1/2 & \textcolor{red}{1} & \\
+   1/2 & 1/2 & 1/2 \\
+       &\ddots & \ddots&\ddots\\
+       &       & 1/2 & 1/2 & 1/2\\
+       &       &     &  \textcolor{red}{1} & 1/2
+ \end{pmatrix},
+\]
+それ以外の $N_y-1$ 個の対角ブロックは
+\[
+ \begin{pmatrix}
+   1 & \textcolor{red}{2} & \\
+   1 & 1 & 1 \\
+       &\ddots & \ddots&\ddots\\
+       &       & 1 & 1 & 1\\
+       &       &     &  \textcolor{red}{2} & 1
+ \end{pmatrix}
+\]
+である。これらすべてのブロックに対して、最初の行と最後の行を$1/2$倍すると、
+それぞれ
+\[
+ \begin{pmatrix}
+   1/4 & 1/2 & \\
+   1/2 & 1/2 & 1/2 \\
+       &\ddots & \ddots&\ddots\\
+       &       & 1/2 & 1/2 & 1/2\\
+       &       &     &  1/2 & 1/4
+ \end{pmatrix},
+　\quad
+ \begin{pmatrix}
+   1/2 & 1 & \\
+   1 & 1 & 1 \\
+       &\ddots & \ddots&\ddots\\
+       &       & 1 & 1 & 1\\
+       &       &     &  1 & 1/2
+ \end{pmatrix}
+\]
+となり、これらは対称である。
+
+この、各対角ブロックの最初の行と最後の行を$1/2$倍することで、
+対角ブロック以外のブロックも変更されるが、その結果は
+{\tiny
+\[
+ \left(
+ \begin{array}{ccccc|ccccc|ccccc|ccccc|ccccc}
+  1/4 & 1/2 &   & &  & 1/2& &&&&&&&&&&&&&&&&&&\\
+  1/2 & 1/2 & 1/2 & &  &  & 1 &&&&&&&&&&&&&&&&&&\\
+    &\ddots&\ddots&\ddots& & & & {\ddots}&&&&&&&&&&&&&&&&& \\
+    &         & 1/2 &1/2&1/2& & & & {\ddots} & &&&&&&&&&&&&&&& \\
+    &         &   & 1/2 & 1/4 & & & & & 1/2 &&&&&&&&&&&&&&&\\
+  \hline
+  1/2 & & & &   & 1/2 & 1 & & & &  1/2 & & &&&&&&&&&&&&\\
+  & 1 & & &     & 1 & 1 & 1 & & & & 1 &&&&&&&&&&&&&\\ 
+    &   & \ddots & & & &  \ddots & \ddots & \ddots&&&&\ddots&&&&&&&&&&&& \\
+    &   &         & 1 & & & & 1 & 1 & 1  &&&&1&&&&&&&&&&&\\
+    &   &         &   & 1/2 & & & & 1 & 1/2 & &&&&1/2&&&&&&&&&&\\
+\hline
+   &&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&&&&\\
+   &&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&&&\\
+   &&&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&&\\
+   &&&&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&&\\
+   &&&&&&&&&\ddots&&&&&\ddots&&&&&\ddots&&&&&\\
+\hline
+  &&&&&&&&&&1/2&&&&&1/2&1&&&&1/2&&&&\\
+  &&&&&&&&&&&1&&&&1&1&1&&&&1&&&\\
+  &&&&&&&&&&&&\ddots&&&&\ddots&\ddots&\ddots&&&&\ddots&&\\ 
+  &&&&&&&&&&&&&1&&&&1&1&1&&&&1&\\
+  &&&&&&&&&&&&&&1/2&&&&1&1/2& &&&&1/2 \\
+\hline 
+  &&&&&&&&&&&&&&&{1}&&&&&1/4&1/2&&& \\
+  &&&&&&&&&&&&&&&&{\ddots}&&&&1/2&1/2&1/2&& \\
+  &&&&&&&&&&&&&&&&&{\ddots}&&&&\ddots&\ddots&\ddots& \\
+  &&&&&&&&&&&&&&&&&&1&&&& 1/2 & 1/2& 1/2 \\
+  &&&&&&&&&&&&&&&&&&&1&&&& 1/2 & 1/4 \\
+\end{array}
+\right)
+\]
+}
+であり、対称行列である。
+
+\subsection{heat2n-i-naive2.c}
+
+以上で説明したことを素朴にコーディングすると、次のようなプログラムが得られる。
+連立1次方程式の係数行列は帯行列であるが、そのことは利用していないので、
+効率は高くない。帯行列であることを利用したプログラムは次項で与える。
+
+{\footnotesize
+\verbatimlisting{heat2d/heat2n-i-naive2.c}
+}
+
+\begin{itembox}[l]{\textbf{実行結果 (係数行列の確認)}}\scriptsize
+\verbatimfile{heat2d/heat2n-i-naive2.out}
+\end{itembox}
+
+\subsection{heat2n-i-v2.c}
+
+  上のプログラム {\tt heat2n-i-naive2.c} を、
+対称帯行列向け LU 分解プログラム {\tt symbandlu.c} を利用するように
+書き換えたプログラム {\tt heat2n-i-v2.c} を紹介する。
+
+%
+{\footnotesize
+\verbatimlisting{heat2d/heat2n-i-v2.c}
+}
+
+\subsection{MATLABプログラム}
+
+MATLAB プログラムを作ってある。
+そのうち、この文書とマージするつもりであるが、現在は別文書にしてある。
+
+桂田
+\cite{桂田熱ディリクレMALTAB} (2015),
+\cite{桂田熱ディリクレ非同次MALTAB} (2024),
+\cite{桂田熱ノイマン非同次MALTAB} (2024)
+を見よ。それぞれ同次Ditichlet境界条件の場合、
+非同次Ditichlet境界条件の場合、
+非同次Neumann境界条件の場合を説明してある。
+
+この問題は一応解決した(つもり)。
+ADI法で解く人が多いような気がしているので、
+この辺の解説が実際上役に立つかは分からないけれど。
+
+\medskip
+
+こちらへのマージはどうやろうかな。
+
+総熱量の保存とか、
+差分法プログラムの書き方だけでなく、
+どういう連立1次方程式になるか公式として示していることとか、
+それから行列を対称化するテクニックについて、
+現時点で分かっていることを説明していることとか。
+なるべく早くこちらに取り込みたい。
+
+\section{将来の課題等}
+
+\subsection{効率的なプログラムの作成}
+
+  前節までに色々なプログラムを紹介したが、いくつか不満な点が残っている。
+卒業レポート課題などで解決してもらえると嬉しい。
+
+\begin{itemize}
+\item
+  LAPACK, LAPACK++ などの利用も検討したい。
+%
+\item
+  反復法 (SOR 法, CG 法) のプログラムがない (卒研でやった人はいるけれど、
+ここに取り込める状態になっていない)。
+\end{itemize}
+
+\subsection{多次元領域の問題ではどうすれば効率的か？}
+
+\textcolor{red}{ここはかなり以前に書いたもので、
+書き直したいのだが…}
+
+\paragraph{$1$ 次元では、文句なしに陰解法が良い}
+  空間1次元の場合、$\lambda$ を共通にしたとき、陰解法の (時間) 計算量は、
+陽解法のそれのせいぜい数倍程度であった。
+したがって、陰解法で $\lambda$ をほんの少し大きく取るだけで、
+計算量の観点から有利になった (陽解法では
+安定性の要請から $\lambda$ を大きく取れない)。
+また精度の面でも Crank-Nicolson 法を使えば陽解法と互角以上であった。
+要するに
+%
+\begin{center}
+ \textbf{空間 $1$ 次元の問題では陰解法が陽解法よりもはっきりと優れている。}
+\end{center}
+
+\begin{itembox}[l]{\textbf{陰解法のココロ}}
+  簡単な陽解法以外の方法が色々あるのは、安定性を保ったまま、$\lambda$ 
+をなるべく大きく (言い換えると時間刻み $\tau$ をなるべく大きく) 取るこ
+とによって、問題を効率的に解くためである。
+\end{itembox}
+
+\begin{yodan}\upshape
+  演習で学生に実験をやらせると、せっかく陰解法で解いているのに、
+$\lambda$ を$1/4$ 程度に取って計算したりする。
+これでは計算が遅くなってしまって陰解法を用いる理由があまりないと
+考えられる (もっとも長時間にわたって解く必要がある場合に、
+Crank-Nicolson 法を用いるというのなら、誤差の $\tau$ に関する次数が高
+く精度が高いのでそれなりに意味はあるかもしれない)。最近のコンピューター
+は速いので、空間 $1$ 次元の問題では、それでも十分速く解けるため、あま
+り気にならないのだろうが、側で見ている者としては少し複雑な気持ちになる。
+\qed
+\end{yodan}
+
+\paragraph{$2$次元は微妙？}
+  以上の事情は、2 次元領域ではかなり異なってくる。
+陽解法の場合は、時間に関して $1$ ステップ進めるのに 
+$O(N_x N_y)$ の計算量で済む。一方、陰解法については、
+現われる連立1次方程式の係数行列は、帯行列ではあるが、
+三重対角のような簡単なものではない。
+未知数の個数は約 $N_x N_y$ で、
+係数行列の半バンド幅は約 $N_x$ または $N_y$となるので、
+Gauss の消去法で LU 分解するには、
+$O(N_x^3 N_y)$ または $O(N_x N_y^3)$ の計算量が必要である。
+また LU 分解した後に、個々の連立1次方程式を解くのに必要な計算量は 
+$O(N_x^2 N_y)$ または $O(N_x N_y^2)$ である。
+つまり、
+陰解法において普通の直接法を用いると、
+時間に関して $1$ ステップ進めるのに、
+$O(N_x^2 N_y)$ または $O(N_x N_y^2)$ の計算量が必要になる。
+陽解法と比べると巾が $1$ 違う。
+従ってこのやり方で連立 $1$ 次方程式を解く限り、
+$\lambda$ を $N_x$ または $N_y$ 程度の大きさにしないと
+(時間の刻み幅 $\tau$ を $N_x$ or $N_y$ 倍程度にしないと)、
+計算量の点で太刀打ちできない、ということになる。
+
+  そこで、次のような問題が出て来る。
+%
+\begin{enumerate}[(1)]
+\item
+  $\lambda=C N_a^\alpha$ ($C$, $\alpha$ は正定数、例えば $\alpha=1/2$,
+$1$) のようにした場合、差分スキームの適合性 (consistency), 
+安定性、差分解の精度はどうなるか？\\
+%
+  →安定性については、少なくとも理論的には以下のことが分かっている。
+%
+\begin{enumerate}[(a)]
+\item
+  最大値ノルムで安定性を考えると、$\theta$ を $1$ にするか、$1$ に非常
+に近い値にしないと安定性が保証できない。
+\item
+  $2$ ノルムで安定性を考えると、$\theta\ge 1/2$ であれば大丈夫。
+%
+\end{enumerate}
+%
+  →精度については以下のように考えられる。
+%
+\begin{enumerate}[(a)]
+\item
+  一般には
+%
+\[
+  \mbox{$2$ ノルムによる誤差}=O(\tau+h_x^2+h_y^2)
+\]
+%
+という精度しか保証できないので、$\tau$ を大きくすると、
+精度は陽解法よりもはっきり悪くなると考えられる。
+%
+\item
+  Crank-Nicolson 法など、特別の場合には
+%
+\[
+  \mbox{$2$ ノルムによる誤差}=O(\tau^2+h_x^2+h_y^2)
+\]
+%
+のような精度が保証される。この場合には、精度に関しては $\tau$ を $h_x$ 
+や $h_y$ と同程度の大きさにしても、
+それほど精度は落ちないと考えられる (あまり自信がないので誰か確かめて欲しい)。
+\end{enumerate}
+%
+\item
+  反復法を使うと、陰解法で $1$ ステップ進めるのに必要な計算量が軽減で
+きるか？\\
+%
+  → 反復法の場合には、十分な精度の得られる反復回数の見積りをしないと
+計算量の解析ができない。定常反復法の場合には、少なくとも長方形領域など
+の簡単な場合には、係数行列のスペクトル半径の値が分るが、反復法の初期値の
+精度の収束への影響が無視できないため、あまり簡単ではない
+(熱方程式のような非定常問題では、$1$ ステップ前の解を初期値に採用するのが
+普通であるが、それはどの程度の精度があると考えれば良いだろうか？とか)。
+非定常反復法の場合についてはまた別の難しさがある。
+実験的に色々な主張を見たことはあるが、理論的な分析は可能だろうか？
+%
+\item
+  空間 $3$ 次元ではどうなるか？
+\end{enumerate}
+
+\subsection{2017年3月メモ}
+
+この節の前項までを書いたのは随分以前のことである。
+今回、久しぶりにプログラムの見直しをすることにした。
+
+この文書も加筆・修正する可能性 (必要性?) があるが、
+現時点で少し補足しておく。
+
+\begin{enumerate}
+\item
+  行列の Kronecker 積を用いた連立１次方程式の係数行列表現
+(\ref{subsec:クロネッカー積を使った表現} 参照) は、
+それなりに便利であるが、Poisson方程式の場合ほど見通しが良いものではなく、
+それだけで済ませられるものでもないだろうと考えている。
+\item
+  差分方程式から得られる (連立1次方程式の)
+係数行列はどうすると対称行列になるか、なぜ対称になるか、
+きちんと説明をしたいと考えているが、(正直に白状すると)
+実は良く理解できていない。
+\item
+  ここ数年、MATLAB が便利に使える場合は、
+C で書くことにこだわらずに MATLAB を使うことにしている。
+解説をここに取り込むべきかもしれないが、今の所は別文書にしてある
+(大きな行列を書こうとすると、紙のサイズが A4 では窮屈とか…)。
+\begin{itemize}
+\item
+  Dirichlet条件の場合:
+ \url{https://m-katsurada.sakura.ne.jp/labo/text/heat2d.pdf}
+\item
+  Neumann条件の場合:
+ \url{https://m-katsurada.sakura.ne.jp/labo/text/heat2n.pdf}
+\end{itemize}
+\item
+  C++ はほぼ C 言語の上位互換で、
+色々便利なクラス・ライブラリィが用意されているので、
+これまで C 言語で記述していたプログラムを、
+C++ に移行させようと考えている。
+C++ には線形演算用のクラス・ライブラリィも色々あり、現在
+\htlink{\textbf{Eigen}}{http://http://eigen.tuxfamily.org/}
+に注目している
+(Eigen では、
+``Eigen is a C++ template library for linear algebra''
+と言っている)。
+とりあえず2つのプログラムを紹介しておく
+(\texttt{heat2d-i.c}, \texttt{heat2n-i.c} と同じ差分方程式の計算をしている)。
+疎行列や連立１次方程式の扱いは Eigen に任せたため、
+(プログラムを書くのはある意味で) 簡単である。
+実行効率はかなり高い。
+\begin{itemize}
+\item
+  \url{https://m-katsurada.sakura.ne.jp/program/fdm/heat2d-i-eigen-sparse.cpp}
+\item
+  \url{https://m-katsurada.sakura.ne.jp/program/fdm/heat2n-i-eigen-sparse.cpp}
+\end{itemize}
+\end{enumerate}
+
+\section{ADI 法}
+
+  \textbf{ADI 法} (\textbf{alternating direction implicit method},
+\textbf{交互方向陰解法}) は、最初
+\begin{quote}
+  Peaceman, D.~W., and Rachford, H.~H., The numerical solution of
+parabolic and elliptic differential equations,
+J.~Soc.~Indust.~Appl.~Math. {\bf 3} (1955), 28--41.
+\end{quote}
+で提案された。
+
+  以下に説明する差分スキームのサンプル・プログラム
+(\texttt{heat2d-adi.c}, \texttt{heat2n-adi.c}) は、
+これまでと同様
+\begin{center}
+\url{https://m-katsurada.sakura.ne.jp/program/index.html#heat2d} 
+\end{center}
+においてある。
+
+\subsection{差分方程式}
+
+  ADI 法とは、時間に関する $1$ ステップを半分に分割し、
+各半ステップの一方では $x$ 方向についてのみ陰解法を施し、
+もう一方では $y$ 方向についてのみ陰解法を施す、
+つまり交互に陰解法を適用する方向を入れ換える、という方法である。
+
+  以下このことを
+\begin{eqnarray}
+  u_t(x,y,t) &=& \Laplacian u(x,y,t)
+   \quad\mbox{(in $\Omega\times(0,\infty)$)},\\
+  u(x,y,t)&=& \alpha(x,y)
+    \quad\mbox{($(x,y,t)\in\rd\Omega\times(0,\infty)$)}\\
+  u(x,y,0)&=& f(x,y)
+    \quad\mbox{($(x,y)\in\overline\Omega$)}
+\end{eqnarray}
+という初期値境界値問題に即して説明する。
+
+  熱伝導方程式を ADI 法により近似して作った差分方程式は
+\begin{eqnarray*}
+\frac{U^{n+1/2}_{i,j}-U^{n}_{i,j}}{\tau/2}
+&=&\frac{U^{n+1/2}_{i+1,j}-2U^{n+1/2}_{i,j}+U^{n+1/2}_{i-1,j}}{h_x^2}
+  +\frac{U^{n}_{i,j+1}-2U^{n}_{i,j}+U^{n}_{i,j-1}}{h_y^2}, \\
+\frac{U^{n+1}_{i,j}-U^{n+1/2}_{i,j}}{\tau/2}
+&=&\frac{U^{n+1/2}_{i+1,j}-2U^{n+1/2}_{i,j}+U^{n+1/2}_{i-1,j}}{h_x^2}
+  +\frac{U^{n+1}_{i,j+1}-2U^{n+1}_{i,j}+U^{n+1}_{i,j-1}}{h_y^2}
+\end{eqnarray*}
+である。
+
+  $\lambda_x:=\tau/(2 h_x^2)$, $\lambda_y:=\tau/(2 h_y^2)$ として、
+まず $n$ から $n+1/2$ 段へは、
+\[
+  (1+2\lambda_x)U^{n+1/2}_{i,j}
+ -\lambda_x(U^{n+1/2}_{i+1,j}+U^{n+1/2}_{i-1,j})
+ =
+  (1-2\lambda_y)U^{n}_{i,j}
+ +\lambda_y(U^{n}_{i,j+1}+U^{n}_{i,j-1}) 
+ \quad
+ \left(
+\begin{array}{l}
+ 1\le i\le N_x-1,\\
+ 1\le j\le N_y-1\\
+\end{array}\right).
+\]
+  ゆえに行列、ベクトルで連立 $1$ 次方程式の形に表すと、
+\begin{eqnarray*}
+ &&\left(
+  \begin{array}{ccccccc}
+   1+2\lambda_x& -\lambda_x  \\
+   -\lambda_x  &1+2\lambda_x& -\lambda_x \\
+               & -\lambda_x &1+2\lambda_x& -\lambda_x \\
+               &            & \ddots     &\ddots & \ddots \\
+               &            &            &-\lambda_x&1+2\lambda_x&-\lambda_x \\
+               &            &            &          &-\lambda_x&1+2\lambda_x
+   \end{array}
+  \right)
+  \left(
+    \begin{array}{c}
+      U^{n+1/2}_{1,j} \\
+      U^{n+1/2}_{2,j} \\
+      U^{n+1/2}_{3,j} \\
+      \vdots \\
+      U^{n+1/2}_{N_x-2,j} \\
+      U^{n+1/2}_{N_x-1,j}
+    \end{array}
+  \right) \\
+  &&\qquad =
+  \left(
+\begin{array}{c}
+  (1-2\lambda_y)U^{n}_{1,j}
+ +\lambda_y(U^{n}_{1,j+1}+U^{n}_{1,j-1}) \\
+  (1-2\lambda_y)U^{n}_{2,j}
+ +\lambda_y(U^{n}_{2,j+1}+U^{n}_{2,j-1}) \\
+  (1-2\lambda_y)U^{n}_{3,j}
+ +\lambda_y(U^{n}_{3,j+1}+U^{n}_{3,j-1})  \\
+  \vdots \\
+  (1-2\lambda_y)U^{n}_{N_x-2,j}
+ +\lambda_y(U^{n}_{N_x-2,j+1}+U^{n}_{N_x-2,j-1})  \\
+    (1-2\lambda_y)U^{n}_{N_x-1,j}
+ +\lambda_y(U^{n}_{N_x-1,j+1}+U^{n}_{N_x-1,j-1})
+\end{array}
+ \right)
+ +
+ \left(
+  \begin{array}{c}
+    \lambda_x U_{0,j}^{n+1/2}\\
+     0 \\
+     \vdots\\
+     \vdots\\
+     0\\
+    \lambda_x U_{N_x,j}^{n+1/2}\\
+\end{array}
+ \right)\\
+ &&
+  \qquad\mbox{($j=1,2,\cdots,N_y-1$)}.
+\end{eqnarray*}
+
+  次に $n+1/2$ から $n+1$ 段へは
+\[
+  (1+2\lambda_y)U^{n+1}_{i,j}
+ -\lambda_y(U^{n+1}_{i,j+1}+U^{n+1}_{i,j-1})
+ =
+  (1-2\lambda_x)U^{n+1/2}_{i,j}
+ +\lambda_x(U^{n+1/2}_{i+1,j}+U^{n+1/2}_{i-1,j}) 
+ \quad
+ \left(
+\begin{array}{l}
+ 1\le i\le N_x-1,\\
+ 1\le j\le N_y-1\\
+\end{array}\right).
+\]
+すなわち
+\begin{eqnarray*}
+ &&\left(
+  \begin{array}{ccccccc}
+   1+2\lambda_y& -\lambda_y  \\
+   -\lambda_y  &1+2\lambda_y& -\lambda_y \\
+               & -\lambda_y &1+2\lambda_y& -\lambda_y \\
+               &            & \ddots     &\ddots & \ddots \\
+               &            &            &-\lambda_y&1+2\lambda_y&-\lambda_y \\
+               &            &            &          &-\lambda_y&1+2\lambda_y
+   \end{array}
+  \right)
+  \left(
+    \begin{array}{c}
+      U^{n+1}_{i,1} \\
+      U^{n+1}_{i,2} \\
+      U^{n+1}_{i,3} \\
+      \vdots \\
+      U^{n+1}_{i,N_y-2} \\
+      U^{n+1}_{i,N_y-1}
+    \end{array}
+  \right) \\
+  && \qquad =
+  \left(
+\begin{array}{c}
+  (1-2\lambda_x)U^{n+1/2}_{i,1}
+ +\lambda_x(U^{n+1/2}_{i+1,1}+U^{n+1/2}_{i-1,1}) \\
+  (1-2\lambda_x)U^{n+1/2}_{i,2}
+ +\lambda_x(U^{n+1/2}_{i+1,2}+U^{n+1/2}_{i-1,2}) \\
+  (1-2\lambda_x)U^{n+1/2}_{i,3}
+ +\lambda_x(U^{n+1/2}_{i+1,3}+U^{n+1/2}_{i-1,3})  \\
+  \vdots \\
+  (1-2\lambda_x)U^{n+1/2}_{i,N_y-2}
+ +\lambda_x(U^{n+1/2}_{i+1,N_y-2}+U^{n+1/2}_{i-1,N_y-2})  \\
+    (1-2\lambda_x)U^{n+1/2}_{i,N_y-1}
+ +\lambda_x(U^{n+1/2}_{i+1,N_y-1}+U^{n+1/2}_{i-1,N_y-1}) 
+\end{array}
+ \right)
+ +
+ \left(
+  \begin{array}{c}
+    \lambda_y U_{i,0}^{n+1}\\
+     0 \\
+     \vdots\\
+     \vdots\\
+     0\\
+    \lambda_y U_{i,N_y}^{n+1}\\
+\end{array}
+ \right)\\
+  &&\qquad\mbox{($i=1,2,\cdots,N_x-1$)}.
+\end{eqnarray*}
+
+\subsection{安定性と収束性}
+
+  安定性については、詳しくは、
+\ref{節:ADI法の安定性の解析} 「ADI法の安定性解析」を見よ。
+$\tau$ がどんなに大きくても安定 (無条件安定) という結果がある。
+
+  収束証明を書いたことはないが、
+\[
+  \|(a_{ij})\|=\left(\sum_{i,j}\left|a_{ij}\right|^2\right)^{1/2}
+\]
+というノルムについての収束証明は得られる、と信じている
+(だれか初等的な証明を書かないかな)。
+
+\subsection{効率に関する考察}
+
+  以上から、ADI 法の計算では、$t_n$ から $t_{n+1}$ までの間に、
+$N_x-1$ 未知数の連立 1 次方程式を $N_y-1$ 個、
+$N_y-1$ 未知数の連立 1 次方程式を $N_x-1$ 個、
+解く必要がある。連立1次方程式はいずれも $3$ 項方程式なので、
+Gauss の消去法を用いて、
+$O(N_x N_y)$ 程度の演算回数で解けることが分かる。
+これは\footnote{\texttt{trilu()} では、
+引き算、掛け算、割り算をそれぞれ $n-1$ 回、
+\texttt{trisol()} では、引き算と掛け算をそれぞれ $2(n-1)$ 回、
+割り算を $n$ 回実行するようになっている。}、
+陽解法と ADI 法では、共通の $\tau$ を取る場合に、
+計算量が定数倍程度しか違わず、
+$\theta$ 法と比べると格段に計算量が少ないということを意味する。
+
+\begin{itembox}{補足: $\theta$ 法を消去法で解く場合の計算量}
+  係数行列が、未知数の個数 $N$, 半バンド幅 $m$ の帯行列である場合、
+LU 分解や解を求めるのに要する演算量はそれぞれ $O(N m^2)$, $O(N m)$ である。
+
+長方形領域における熱方程式を $\theta$ 法で解く場合、
+この文書で解説した方法を採用すると、
+$N\kinji N_x N_y$, $m\kinji N_x$ であるから、
+演算量は、
+LU 分解が $O(N_x^3 N_y)$, 連立1次方程式の求解が $O(N_x^2N_y)$ となる。
+熱方程式の場合、LU 分解は最初に 1 度だけすればよいので、
+目をつむるにしても、
+連立1次方程式の求解に要する計算量が、
+ADI 法 $O(N_x N_y)$ vs. $\theta$ 法 $O(N_x^2 N_y)$ で、
+羃が $1$ 異なることに注目しよう。 \qed
+\end{itembox}
+
+  というわけで、ただの熱伝導方程式を解くだけならば、
+$\theta$ 法よりは ADI 法がお勧めである。
+しかし熱伝導方程式をもじって、
+$1$ 階の空間微分があるような方程式を (物理的には、
+媒質の流れがあるような現象) 考えると、
+ADI 法はあまりうまく行かなくなる (と言われているらしい)。
+そのような応用を考えると、
+結局は $\theta$ 法のような解法の重要性は揺るがない、ということらしい
+(あまり自信がない)。
+
+\subsection{実験の手引 --- ある年の「応用数理実験」から}
+
+(古い話で、今見ると「何だこれは」という印象があるが、
+新しいのを書く気もしないので、とりあえず放置。)
+
+  2次元領域における熱伝導方程式の初期値境界値問題に対する差分法として、
+陽解法、$\theta$ 法 (陰解法), ADI 法を解説した。簡単な陽解法以外の方法
+が色々あるのは、安定性を保ったまま、時間刻み $\tau$ をなるべく大きく取
+ることによって、問題を効率的に解くためである。そこで、次のような
+実験により、高級な解法を用いることの効用を確かめてみよう。
+
+\begin{enumerate}
+\item
+  分割数を変えながら、陽解法のプログラムの計算時間を測り、分割数と計算
+時間の関係を調べる。(もちろん、同じ初期値境界値問題を、$\lambda$ など、
+分割数以外のパラメーターはすべて固定して解く。)
+計算時間は {\tt time} コマンド
+を使って測定する。
+\begin{screen}
+\begin{verbatim}
+oyabun% time heat2d-e
+N: 10
+λ: 0.2
+Tmax: 0.1
+τ=0.002 ですが、Δtをどうしますか: 0.01
+0.220u 0.300s 0:06.40 8.1% 0+614k 0+3io 0pf+0w
+oyabun% 
+\end{verbatim}
+\end{screen}\\
+これは計算時間 0.220 秒、システム時間 0.300 秒、経過時間 6.40 秒と言う
+ことを表している。
+\item
+  上と同様のことを ADI 法のプログラムで行なう。
+\item
+  厳密解が簡単に分かるような初期値をいくつか用意して、それぞれの問題を 
+($\lambda=1/2$, $1/4$ で) 陽解法で解き、計算誤差と計算時間を測定する。
+\begin{itemize}
+\item 
+  誤差については、($T_{\rm max}=K\tau$ として)、離散化最大値ノルム
+\[
+  \max_{0\le i\le N_x, 0\le j\le N_y}
+  \left|u(x_i,y_j,T_{\rm max})-U_{i,j}^K\right|
+\]
+や離散化 $L^2$ ノルム
+\[
+  \left(\Dfrac{1}{N_x N_y}\sum_{0\le i\le N_x, 0\le j\le N_y}
+  \left|u(x_i,y_j,T_{\rm max})-U_{i,j}^K\right|^2
+  \right)^{1/2}
+\]
+などを指標とする。
+\item
+  分割数と計算時間の関係については、簡単のため $N_x=N_y$ として、$N_x$ 
+と計算時間をグラフにプロット (必要ならば対数目盛) するのが良い。
+\item
+  (陽解法であるから)、$\lambda\equiv \tau/h_x^2 + \tau/h_y^2\le 1/2$ 
+でないと不安定になるので、せいぜい $\lambda=1/2$, $1/4$ で実験すれば十
+分。いくつかの初期値、$\lambda=1/2$ または $1/4$, 適当に固定した一つの 
+$T_{\rm max}$ について、$N_x$ を変えながら、誤差と計算時間を測定する。
+\end{itemize}
+\item
+  同じ初期値境界値問題を ADI 法を用いて解く。
+その際、区間の分割は陽解法と同じにするが、時間刻み $\tau$ は色々変えて、
+精度がどのように変化するか調べる。
+そうして、陽解法と同程度の精度が得られる範囲で、
+どこまで大きくできる (速く計算できる) か調べる。
+その場合の計算時間を測って、陽解法と比較する。\\
+%
+  ADI 法について、
+$\lambda$ 以外のパラメーターはなるべく陽解法と同じ値を選ぶ
+(比較するときの常識)。$\lambda$ については、
+陽解法と同じ値から始めて、順々に大きくして行く。
+$L^2$ ノルム的には、
+$\lambda$ をいくら大きくとっても安定であることが証明できる。
+そこで問題は、
+精度を落さない範囲でどこまで $\lambda$ を大きく取れるか？であるが、理論的には
+\[
+  \mbox{誤差}=O(\tau^2+h_x^2+h_y^2)
+\]
+であることが分かっている。これから $\tau$ は $h_x$, $h_y$ と同程度、
+つまり $\lambda$ について言えば、
+$N_x (=N_y)$ 程度まで大きく取れる可能性があることが分かる。
+そこで、$\lambda$ の値としては、少なくとも $1/2$, $\sqrt{N_x}$,
+$N_x$ の 3 つの場合について調べること
+($T_{\rm max}$ をなるべく共通に選べるよう、少しくらいは変化させても良い)。
+\end{enumerate}
+
+\subsection{付録: Neumann 境界条件の場合}
+
+\begin{eqnarray}
+  u_t &=& \Laplacian u
+   \quad\mbox{(in $\Omega\times(0,\infty)$)},\\
+  \Dfrac{\rd u}{\rd n}(x,y,t)&=& \beta(x,y)
+    \quad\mbox{($(x,y,t)\in\rd\Omega\times(0,\infty)$)}\\
+  u(x,y,0)&=& f(x,y)
+    \quad\mbox{($(x,y)\in\overline\Omega$)}
+\end{eqnarray}
+という初期値境界値問題に即して説明する。
+
+  第$n$段から第$n+1/2$段まで。まず $1\le i\le N_x-1$, $1\le j\le
+N_y-1$ に対しては
+\[
+  (1+2\lambda_x)U_{i,j}^{n+1/2}-\lambda_x(U_{i+1,j}^{n+1/2}+U_{i-1,j}^{n+1/2})
+ =(1-2\lambda_y)U_{i,j}^{n}+\lambda_y(U_{i,j+1}^{n}+U_{i,j-1}^{n})
+\]
+という差分方程式のままでよい。
+\begin{itemize}
+\item
+  $i=0$ の場合は、$\Dfrac{\rd u}{\rd n}(a,y_j)=\beta(a,y_j)$ の近似と
+して
+\[
+  -\frac{U_{1,j}^{n+1/2}-U_{-1,j}^{n+1/2}}{2h_x}=\beta(a,y_j)
+\]
+を採用する。これから得られる
+\[
+ U_{-1,j}^{n+1/2}=U_{1,j}^{n+1/2}+2h_x\beta(a,y_j)
+\]
+を用いて、差分方程式から $U_{-1,j}^{n+1/2}$ を消去する。例えば $1\le
+j\le N_y-1$ の場合、
+\[
+  (1+2\lambda_x)U_{0,j}^{n+1/2}-2\lambda_x(U_{1,j}^{n+1/2}+h_x\beta(a,y_j))
+ =(1-2\lambda_y)U_{0,j}^{n}+\lambda_y(U_{0,j+1}^{n}+U_{0,j-1}^{n})
+\]
+を整理して
+\[
+  (1+2\lambda_x)U_{0,j}^{n+1/2}-2\lambda_x U_{1,j}^{n+1/2}
+ =(1-2\lambda_y)U_{0,j}^{n}+\lambda_y(U_{0,j+1}^{n}+U_{0,j-1}^{n})
+   +2\lambda_x h_x\beta(a,y_j).
+\]
+\item
+  同様に $i=N_x$ の場合は、$\Dfrac{\rd u}{\rd n}(b,y_j)=\beta(b,y_j)$ 
+の近似として
+\[
+  \frac{U_{N_x+1,j}^{n+1/2}-U_{N_x-1,j}^{n+1/2}}{2h_x}=\beta(b,y_j)
+\]
+を採用する。これから得られる
+\[
+ U_{N_x+1,j}^{n+1/2}=U_{N_x-1,j}^{n+1/2}+2h_x\beta(b,y_j)
+\]
+を用いて、差分方程式から $U_{N_x+1,j}^{n+1/2}$ を消去する。例えば 
+$1\le j\le N_y-1$ の場合、
+\[
+  (1+2\lambda_x)U_{N_x,j}^{n+1/2}
+  -2\lambda_x(U_{N_x-1,j}^{n+1/2}+h_x\beta(b,y_j))
+ =(1-2\lambda_y)U_{N_x,j}^{n}+\lambda_y(U_{N_x,j+1}^{n}+U_{N_x,j-1}^{n})
+\]
+を整理して
+\[
+  (1+2\lambda_x)U_{N_x,j}^{n+1/2}-2\lambda_x U_{N_x-1,j}^{n+1/2}
+ =(1-2\lambda_y)U_{N_x,j}^{n}+\lambda_y(U_{N_x,j+1}^{n}+U_{N_x,j-1}^{n})
+   +2\lambda_x h_x\beta(b,y_j).
+\]
+\item
+  $j=0$ の場合は
+\[
+  U_{i,-1}^n=U_{i,1}^n+2  h_y \beta(x_i,c)
+\]
+によって $U_{i,-1}^n$ を消去する。例えば $1\le i\le N_x-1$ の場合、
+\[
+  (1+2\lambda_x)U_{i,0}^{n+1/2}-\lambda_x(U_{i+1,0}^{n+1/2}+U_{i-1,0}^{n+1/2})
+ =(1-2\lambda_y)U_{i,0}^{n}+2\lambda_y(U_{i,1}^{n}+h_y\beta(x_i,c)).
+\]
+  $i=0$, $N_x$ の場合はそれぞれ
+\begin{eqnarray*}
+  (1+2\lambda_x)U_{0,0}^{n+1/2}-2\lambda_x U_{1,0}^{n+1/2}
+ &=&(1-2\lambda_y)U_{0,0}^{n}+2\lambda_y(U_{0,1}^{n}+h_y\beta(a,c))
+  +2\lambda_x h_x\beta(a,c),\\
+  (1+2\lambda_x)U_{N_x,0}^{n+1/2}-2\lambda_x U_{N_x-1,0}^{n+1/2}
+ &=&(1-2\lambda_y)U_{N_x,0}^{n}+2\lambda_y(U_{N_x-1,1}^{n}+h_y\beta(b,c))
+  +2\lambda_x h_x\beta(b,c).
+\end{eqnarray*}
+\item
+  $j=N_y$ の場合は
+\[
+  U_{i,N_y+1}^n=U_{i,N_y-1}^n+2  h_y \beta(x_i,d)
+\]
+によって $U_{i,N_y+1}^n$ を消去する。例えば $1\le i\le N_x-1$ の場合、
+\[
+  (1+2\lambda_x)U_{i,N_y}^{n+1/2}
+  -\lambda_x(U_{i+1,N_y}^{n+1/2}+U_{i-1,N_y}^{n+1/2})
+ =(1-2\lambda_y)U_{i,N_y}^{n}+2\lambda_y(U_{i,N_y-1}^{n}+h_y\beta(x_i,d)).
+\]
+  $i=0$, $N_x$ の場合はそれぞれ
+\begin{align*}
+  (1+2\lambda_x)U_{0,N_y}^{n+1/2}-2\lambda_x U_{1,N_y}^{n+1/2}
+ &=(1-2\lambda_y)U_{0,N_y}^{n}+2\lambda_y(U_{0,N_y-1}^{n}+h_y\beta(a,d))
+  +2\lambda_x h_x\beta(a,d),\\
+  (1+2\lambda_x)U_{N_x,N_y}^{n+1/2}-2\lambda_x U_{N_x-1,N_y}^{n+1/2}
+ &=(1-2\lambda_y)U_{N_x,N_y}^{n}+2\lambda_y(U_{N_x-1,N_y-1}^{n}+h_y\beta(b,d))
+  +2\lambda_x h_x\beta(b,d).
+\end{align*}
+\end{itemize}
+
+\section{Kronecker 積の利用}
+
+本来、この文書にマージすべきであるが、
+桂田 \cite{桂田熱ディリクレMALTAB}, \cite{桂田熱ノイマンMALTAB}
+が参考になるかもしれない。
+
+\chapter{差分法の安定性と収束性}\label{chapter:差分法の安定性と収束性}
+
+  「応用数学」の『発展系の数値解析』では、
+対象が熱伝導方程式であるという特性を利用して、
+離散最大値原理をもとにして安定性を論じた。この章では、
+より一般の場合にも適用可能な形で、安定性について論じる。
+
+(2004年現在、
+\begin{quote}
+ 「『発展系の数値解析』に加えること」\\
+ \url{https://m-katsurada.sakura.ne.jp/labo/text/heat-fdm-0-add.pdf}
+\end{quote}
+を書いている途中である。行列法については、まずそちらを読んで欲しい。
+かなり改良されているところがある。
+
+ADI法、$\theta$ 法の安定性の解析を書き加えた (2007年3月下旬)。
+おもちゃ箱をぶちまけたような全体を整理したいものだ…)
+
+\section{概論}
+
+\subsection{二つの解析手法}\label{subsection:二つの解析手法}
+
+  熱伝導方程式のような線形偏微分方程式の問題を差分法を用いて離散化する
+と、線形差分方程式が得られる。
+
+『発展系の数値解析』では、
+熱方程式を差分化して得られた差分方程式が離散最大値原理を満たすという
+「特殊事情」を活用して、
+差分解の厳密解への収束や安定性を示した。
+ここでは差分方程式の安定性解析に適用できる、
+より一般的な手法を紹介しよう。
+
+  一般に線形差分方程式の安定性の解析には、次の二つの方法が用いられる。
+%
+\begin{itemize}
+\item
+  差分方程式を行列、ベクトルを用いて表し、
+行列の固有値に関する議論に持ち込む (行列法)
+\item
+  有限 Fourier 級数を用いる (von Neumann の方法)
+\end{itemize}
+
+  「Fourier 級数を用いる方法は簡単だが、境界条件を無視するために、
+厳密さを欠く。」と述べている本もある。正確には、
+きちんと境界条件を考慮して考察するのが難しかったり面倒だったりするので、
+ずぼらにやっている人が多いということではないか？
+(きちんとやろうと思えば出来る場合があるのでは) と疑っている。
+
+\noindent
+(2024年夏加筆)
+  区間における熱方程式は、(全周Dirichletとか全周Neumannとか)
+固有関数が具体的に求められたりするので、Fourier級数を用いた解の公式があり、
+よく紹介されるわけだが、差分方程式についても、固有ベクトルが求められるならば、
+同様の(差分)解の公式が出来る。
+安定性の問題に説明が傾きすぎて、
+そういうことにあまり意識が行っていない気がする。
+安定性条件が満たされない場合の差分解がジグザグする理由については、
+以前から気づいていて、ほのめかして書いたりしていたけれど、
+差分解の公式を書いてしまえば「この項が成長してくるのだ」
+と明快に説明できる。
+安定とは正の固有値が存在しないこと、と言ってみたり。
+von Neumannの安定性解析って要するにそういうことだよね。
+差分解の厳密解への収束証明とかもストレートに見えるかも。
+離散Fourier変換との関係とか、そういう話もあるかもしれない
+(周期境界条件の場合に$J$ は巡回行列になる。
+そうでない場合は巡回行列にならなかったりするけれど、
+何か近いことが言えたりするのか？
+さすがに無理かな。でも選点直交性があったりするし…)。
+公式があると考えると、
+ずっと先のことを知りたい場合に、
+差分法で延々と計算したりする必要はないのだな
+(そういう考えでプログラム書いてみるのかな)。
+「なんだ結局Fourier級数か」と言われると悲しい気もする。
+そういうことを考えると「熱方程式以外にも使える。差分法はそっちが本分だ。」
+を強調すべきなのだろう。
+
+\subsection{スキームの概念}
+
+  上では「差分方程式の安定性」という書き方をしたのだが、安定性は一つの
+差分方程式について考えるよりも、ある条件を満す無限個の差分方程式の集合
+について考えるべき概念である。
+
+\begin{quote}\small
+  正直に白状すると、筆者は現時点で、誰もが納得する安定性の概念というも
+のをつかめていない。本により、人により、また同じ本・人であっても場合に
+よって少しずつ違った定義があるような気がする。
+
+  ここでは、自分で確かめるために、最初からゆっくり考える。
+\begin{enumerate}
+\item
+  熱方程式の解の安定性というと、
+\[
+  \|\mbox{解}\|\le C\|\mbox{初期値・境界値などのデータ}\|
+\]
+%
+の形の不等式が成り立つこととされる
+($C$ は初期値・境界値などのデータによらない正定数)。
+この形の式で安定性を定義できるのは、熱方程式の特殊性がある。
+つまり、方程式によっては、
+解が時間の経過とともにいくらでも大きく成長することもあり、
+そのような場合は上の不等式のような評価が得ることは期待できないのである。
+ところで、我々は (かなり) 一般の差分方程式に対して、
+その安定性を論じようとしている。\\
+%
+  (Lax の同等性定理というのがあるから、
+一般的に安定性を考える必要性は高いのだ。)
+%
+\item
+  それから、熱方程式の解の安定性と言った場合は、
+本質的に一つの方程式しか対象にしていないが、
+差分方程式の場合には、パラメーターが多い。
+例えば熱方程式の初期値境界値問題を離散化して得た差分方程式の場合、
+空間の刻み幅 $h$ と時間の刻み幅 $\tau$ があり、
+既に分っているように、この値の選び方によって状況が全然異なるのであった。
+この場合、パラメーターのある集合については対応する差分方程式は安定、
+それ以外のパラメーターについては対応する差分方程式は不安定、
+という結果を考えたいがそれはしないようである。
+%
+\item
+  どうも Lax の定理にひきずられて安定性の定義が難しくなっているような
+気がする。
+\end{enumerate}
+\end{quote}
+
+\section{ベクトルのノルム}
+
+  詳しくは付録「有限次元ベクトルと行列のノルム」を参照。
+
+  以下この節では、ベクトルのノルムとして
+\[
+  \|x\|_2:= \sqrt{\sum_{j=1}^N |x_j|^2}
+  \quad\mbox{($x=(x_1,\cdots,x_N)\in\C^N$)}
+\]
+で定義される $\|\cdot\|_2$ を採用する。
+
+\begin{jremark}\upshape
+  離散最大値原理から導かれる安定性は
+\[
+ \|x\|_\infty:= \max_{1\le j\le N}|x_j|
+\]
+で定義されるノルム $\|\cdot\|_\infty$ に関するものであった。
+\end{jremark}
+
+  行列のノルムとしては、
+\[
+  \|A\|_2:= \max_{\|x\|_2=1}\frac{\|Ax\|_2}{\|x\|_2}
+  \quad\mbox{($A\in M(N;\C)$)}
+\]
+で定められる $\|\cdot\|_2$ を用いる (ベクトルと行列のノルムの記号が同
+じものになっている --- いわゆる記号の濫用 --- 大目に見て下さい)。
+
+  漸化式
+%
+\[
+  x_{j+1}=A x_j\quad \mbox{($j=0,1,2,\cdots$)}
+\]
+%
+で定められるベクトル列 $\{x_j\}_{j=0,1,\cdots}$ は、
+いわば等比数列のようなものであり、
+基本的ではあるが、応用上煩雑に現われ、
+重要である (杉浦 \cite{杉浦・横沼} に詳しく書いてあったと記憶している)。
+
+  以下では
+(係数行列が実対称行列であることを利用して)
+Jordan 標準形を用いない証明を述べる。
+基礎となるのは次の有名な事実\footnote{ひょっとすると、
+数値計算をするものにとっては、
+Jordan 標準形の知識よりも重要かも知れない。}である。
+
+\begin{screen}
+\begin{hodai}[実対称行列のノルムはスペクトル半径に等しい]\upshape
+  実対称行列 $A$ について、
+$\|A\cdot\|_2$ は $A$ のスペクトル半径に等しい。すなわち
+%
+\[
+  \|A\|_2=\max\{|\lambda|; \mbox{$\lambda$ は $A$ の固有値}\}.
+\]
+\end{hodai}
+\end{screen}
+\proof
+  (この事実は普通の線形代数の本にも載っていることが多い。)
+\qed
+
+\begin{screen}
+\begin{hodai}\upshape
+  $n$ 次正方行列 $A$ と、ベクトル $x_0$ が与えられたとき、漸化式
+\[
+  x_{j+1}=A x_j\quad\mbox{($j=0,1,2,\cdots$)}
+\]
+%
+でベクトル列 $\{x_j\}_{j=0,1,\cdots}$ を定義する。
+%
+\begin{enumerate}[(1)]
+\item
+  $A$ が実対称で $r(A)\le 1$ ならば、任意の $x_0$ に対して
+\[
+  \|x_j\|_2\le \|x_0\|_2\quad\mbox{($j=0,1,2,\cdots$)}.
+\]
+特に $\{x_j\}_{j=0,1,\cdots}$ は有界である。
+\item
+  $A$ が実対称でない場合は、$r(A)=1$ であっても、
+適当な $x_0$ を取ると、
+$\{x_j\}_{j=0,1,\cdots}$ は非有界となることがある。
+%
+\item
+  $r(A)<1$ ならば、任意の $x_0$ に対して
+\[
+  \dsp\lim_{j\to\infty}x_j=0.
+\]
+\item
+  $r(A)>1$ ならば、ある $x_0$ に対して
+\[
+  \dsp\lim_{j\to\infty}\|x_j\|_2=\infty.
+\]
+\end{enumerate}
+\end{hodai}
+\end{screen}
+
+\proof
+\begin{enumerate}[(1)]
+\item
+  $r(A)=\|A\|_2$ であるから、
+\[
+  \|x_j\|_2=\|A^j x_0\|_2\le \|A^j\|_2 \|x_0\|_2
+  \le (\|A\|_2)^j\|x_0\|_2
+  = r(A)^j\|x_0\|_2 \le \|x_0\|_2.
+\]
+\item
+  例えば
+\[
+  A=
+ \left(
+  \begin{array}{cc}
+   1 & 1 \\
+   0 & 1
+  \end{array}
+ \right)
+\]
+とするとき、$r(A)=1$ であるが、任意の $m\in\N$ に対して
+\[
+  A^m=
+ \left(
+  \begin{array}{cc}
+   1 & m \\
+   0 & 1
+  \end{array}
+ \right)
+\]
+であり、$x=(0,1)^T$ について $A^m x=(m,1)^T$ で $\|A^m x\|\to\infty$.
+%
+\item
+  $r(A)=\|A\|_2$ であるから、
+\[
+  \|x_j\|_2=\|A^j x_0\|_2\le \|A^j\|_2 \|x_0\|_2
+  \le (\|A\|_2)^j\|x_0\|_2
+  = r(A)^j\|x_0\|_2\to 0\quad\mbox{($j\to\infty$)}.
+\]
+(実は $A$ が実対称でない場合にも成立する。)
+\item
+   $A$ の固有値 $\lambda$ で $|\lambda|=r(A)>1$ なるものと、それに
+属する固有ベクトル $u$ を取り、$x_0=u$ とおくと、
+\[
+  x_j=A^j x_0=\lambda^j u.
+\]
+これから任意のノルムに対して
+\[
+  \|x_j\|=|\lambda|^j \|u\|\to \infty. \qed
+\]
+\end{enumerate}
+ 
+\section{\texorpdfstring{$\|\cdot\|_2$}{\textbardbl ・\textbardbl\UTF{2082}} ノルムに関する安定性 --- 行列法}
+
+\subsection{準備}
+
+  $I_n$ で $n$ 次の単位行列を表わし、$J_n$ で
+\[
+  J_n:=
+  \left(
+   \begin{array}{ccccc}
+     0 & 1 & 0 \\
+     1 & 0 & \ddots \\
+     0 & \ddots &         & \ddots \\
+       &        &  \ddots & 0 &  1\\
+       &        & 0 & 1&  0
+\end{array}
+  \right)
+\]
+なる行列を表わす。
+
+\begin{screen}
+\begin{jlemma}\upshape
+  $J_n$ の固有値、固有ベクトルは
+\begin{eqnarray*}
+  \mu_j&=&2\cos\left(\frac{j\pi}{n+1}\right),\\
+  v_j&=&
+  \left(
+   \sin\frac{j\pi}{n+1},
+   \sin\frac{2j\pi}{n+1},
+   \cdots,
+   \sin\frac{n j\pi}{n+1}
+  \right)
+  \quad\mbox{($j=1,2,\cdots,n$)}.
+\end{eqnarray*}
+\end{jlemma}
+\end{screen}
+\proof
+  代入して確かめてみれば良い。 \qed
+
+\subsection{1次元熱方程式に対する陽解法の安定性}
+
+  同次 Dirichlet 境界条件を課した $1$ 次元熱方程式の初期値境界値問題に
+対する陽差分法 (前進 Euler 法) を考えると、
+\[
+  \vec U^{j}:= 
+  \left(
+   \begin{array}{c}
+     U_{1,j}\\
+     \vdots\\
+     U_{N-1,j}\\
+   \end{array}
+  \right)
+\]
+とおくと、差分方程式は
+\[
+  \vec U^{j+1}=[(1-2\lambda)I_{N-1}+\lambda J_{N-1}]\vec U^j\quad
+  \mbox{($j=0,1,2,\cdots$)}
+\]
+となる。
+
+  そこで
+\[
+  A_{N-1}:= (1-2\lambda)I_{N-1}+\lambda J_{N-1}
+\]
+とおくと、
+\[
+  \vec U^{j+1}=A_{N-1} \vec U^j\quad \mbox{($j=0,1,2,\cdots$)}
+\]
+で、$A_{N-1}$ の固有値は
+\begin{eqnarray*}
+  (1-2\lambda)+\lambda \mu_j
+  &=&(1-2\lambda)+\lambda\cdot 2\cos\left(\frac{j\pi}{N}\right)
+   = 1-2\lambda\left[1-\cos\left(\frac{j\pi}{N}\right)\right]\\
+  &=&1-2\lambda\cdot 2\sin^2\left(\frac{j\pi}{2N}\right)
+   =1-4\lambda\sin^2\left(\frac{j\pi}{2N}\right)
+  \quad\mbox{($j=1,2,\cdots,N-1$)}.
+\end{eqnarray*}
+  さらに $A_{N-1}$ は実対称行列だから
+\[
+  \|A_{N-1}\|_2=\max_{j=1,\cdots,N-1}
+   \left|
+    1-4\lambda\sin^2\left(\frac{j\pi}{2N}\right)
+   \right|.
+\]
+
+  ゆえに $\|A_{N-1}\|_2\le 1$ であるための必用十分条件は
+\[
+   \left|
+    1-4\lambda\sin^2\left(\frac{j\pi}{2N}\right)
+   \right|\le 1
+  \quad\mbox{($j=1,2,\cdots,N-1$)}.
+\]
+これは
+\[
+  -1\le 1-4\lambda\sin^2\left(\frac{j\pi}{2N}\right)
+  \quad\mbox{($j=1,2,\cdots,N-1$)},
+\]
+すなわち
+\[
+  \lambda\le\min_{1\le j\le N-1}\frac{1}{2\sin^2\left(\frac{j\pi}{2N}\right)}
+   =\frac{1}{2\sin^2\left(\frac{(N-1)\pi}{2N}\right)}
+\]
+と同値である。スキームが安定であるためには、任意の $N$ についてこの式
+が成り立つことが必要十分で、それは
+\[
+  \lambda\le \frac{1}{2}
+\]
+と同値である。
+
+\subsection{1次元熱方程式に対する $\theta$ 法の安定性}
+
+  $\theta$ 法の場合の差分方程式は
+\[
+  \left[(1+2\theta\lambda)I_{N-1}-\theta\lambda J_{N-1}\right]\vec U^{j+1}
+  =\left[
+     (1-2(1-\theta)\lambda)I_{N-1}+(1-\theta)\lambda J_{N-1}
+   \right]\vec U^{j}
+  \quad\mbox{($j=0,1,2,\cdots$)}.
+\]
+ゆえに
+\[
+  B_{N-1}:=
+  \left[(1+2\theta\lambda)I_{N-1}-\theta\lambda J_{N-1}\right]^{-1}
+  \left[(1-2(1-\theta)\lambda)I_{N-1}+(1-\theta)\lambda J_{N-1}\right]
+\]
+とおけば、
+\[
+  \vec U^{j+1}=B_{N-1}\vec U^j\quad\mbox{($j=0,1,2,\cdots$)}.
+\]
+  $B_{N-1}$ の固有値は
+\begin{eqnarray*}
+  \frac{\left[1-2(1-\theta)\lambda\right]+(1-\theta)\lambda\cdot2\cos\frac{j\pi}{N}}
+   {(1+2\theta\lambda)-\theta\lambda\cdot2\cos\frac{j\pi}{N}}
+  &=&
+  \frac{1-2(1-\theta)\lambda\left(1-\cos\Dfrac{j\pi}{N}\right)}
+   {1+2\theta\lambda\left(1-\cos\Dfrac{j\pi}{N}\right)} \\
+  &=&
+  \frac{1-4(1-\theta)\lambda\sin^2\Dfrac{j\pi}{2N}}
+   {1+4\theta\lambda\sin^2\Dfrac{j\pi}{2N}}
+  \quad\mbox{($j=1,2,\cdots,N-1$)}.
+\end{eqnarray*}
+ゆえに $\|B_{N-1}\|_2\le 1$ であるための必用十分条件は
+\[
+  -1\le
+  \frac{1-4(1-\theta)\lambda\sin^2\Dfrac{j\pi}{2N}}
+   {1+4\theta\lambda\sin^2\Dfrac{j\pi}{2N}}
+  \le 1
+  \quad\mbox{($j=1,2,\cdots,N-1$)}.
+\]
+\[
+  \lambda(1-2\theta)\sin^2\frac{j\pi}{2N}\le \frac{1}{2}
+  \quad\mbox{($j=1,2,\cdots,N-1$)}.
+\]
+  $\theta\ge 1/2$ ならば、これは常に ($\lambda$ が何であっても) 満たさ
+れる。$\theta<1/2$ の場合は、
+\[
+  \lambda
+  \le\min_{1\le j\le N-1}\frac{1}{2(1-2\theta)\sin^2\Dfrac{j\pi}{2N}}
+  =\frac{1}{2(1-2\theta)\sin^2\Dfrac{(N-1)\pi}{2N}}.
+\]
+これが任意の $N$ について成り立つためには
+\[
+  \lambda\le \frac{1}{2(1-2\theta)}
+\]
+であることが必要十分。 
+
+  以上をまとめると、
+\begin{enumerate}[(i)]
+\item
+  $\theta\ge 1/2$ ならば無条件に安定。
+\item
+  $0\le \theta<1/2$ ならば、安定であるための必用十分条件は
+\[
+  \lambda\le\frac{1}{2(1-2\theta)}.
+\]
+\end{enumerate}
+
+\section{行列法}
+
+(前の節と内容がだぶっている。適当にまとめる、
+あるいは書き直すつもり。)
+
+\subsection{熱方程式に対する Euler 陽解法}
+
+  熱方程式の陽差分法
+\[
+  u_{i,j+1}=(1-2\lambda)u_{i,j}+\lambda(u_{i-1,j}+u_{i+1,j})
+  \quad\mbox{($i=1,2,\cdots,N-1$, $j=0,1,\cdots$)},
+\]
+\[
+  u_{0,j+1}=u_{N,j+1}=0
+\]
+から
+\[
+  \left(
+   \begin{array}{c}
+     \FDMSOL{1}{j+1}\\
+     \FDMSOL{2}{j+1}\\
+     \vdots\\
+     u_{N-2,j+1}\\
+     \FDMSOL{N-1}{j+1}
+   \end{array}
+  \right)
+  =
+  \left(
+   \begin{array}{ccccc}
+     1-2\lambda & \lambda \\
+     \lambda & 1-2\lambda & \lambda\\
+             & \lambda & 1-2\lambda & \lambda\\
+        & & \ddots & \ddots & \ddots\\
+        & & & \lambda & 1-2\lambda
+   \end{array}
+  \right)
+  \left(
+   \begin{array}{c}
+     u_{1,j}\\
+     u_{2,j}\\
+     \vdots\\
+     u_{N-2,j}\\
+     u_{N-1,j}
+   \end{array}
+  \right).
+\]
+この方程式を
+\[
+  \Vector{u}_{j+1}=A\Vector{u}_{j}
+\]
+と書こう。つまり
+\[
+  \Vector{u}_j=
+  \left(
+   \begin{array}{c}
+     \FDMSOL{1}{j+1}\\
+     \FDMSOL{2}{j+1}\\
+     \vdots\\
+     u_{N-2,j+1}\\
+     \FDMSOL{N-1}{j+1}
+   \end{array}
+  \right)
+  \quad \mbox{($j=0,1,\cdots$)}, \quad
+  A=
+  \left(
+   \begin{array}{ccccc}
+     1-2\lambda & \lambda \\
+     \lambda & 1-2\lambda & \lambda\\
+             & \lambda & 1-2\lambda & \lambda\\
+        & & \ddots & \ddots & \ddots\\
+        & & & \lambda & 1-2\lambda
+   \end{array}
+  \right)
+\]
+とおくわけである。
+
+
+  $N-1$ 次正方行列 $T$ を
+\[
+  T=
+  \left(
+   \begin{array}{ccccc}
+     -2 & 1 \\
+     1 & -2 & 1\\
+             & 1 & -2 & 1 \\
+        & & \ddots & \ddots & \ddots\\
+        & & & 1 & -2
+   \end{array}
+  \right)
+\]
+で定めると
+\[
+  A=I+\lambda T
+\]
+である。
+
+  $T$ の固有値、固有ベクトルは次のようになる。
+\[
+  \mu_i=-4\sin^2\left(\frac{i\pi}{2N}\right),
+  \quad
+  \Vector{v}_i=
+  \left(
+   \begin{array}{c}
+    \sin\frac{i\pi}{N}\\
+    \sin\frac{2i\pi}{N}\\
+    \vdots \\
+    \sin\frac{(N-1)i\pi}{N}
+   \end{array}
+  \right)
+  \quad\mbox{($i=1,2,\cdots,N-1$)}.
+\]
+
+  ところで、$f(x)=1+\lambda x$ とおくと、$A=f(T)$ であるが、
+%
+\begin{itembox}[l]{\textbf{スペクトル写像定理}\footnote{行列なんだし、
+「フロベニウスの定理」という方が良いだろうか…これも一度考えないと。}}
+  $f(T)$ の固有値は $f(\lambda)$ ($\lambda$ は $T$ の固有値).
+\end{itembox}
+%
+から、$A$ の固有値は
+%
+\[
+  f(\mu_i)=1+\lambda\left[-4\sin^2\left(\frac{i\pi}{2N}\right)\right]
+  \quad\mbox{($i=1,2,\cdots,N-1$)}.
+\]
+
+
+  したがって、安定性の条件は
+%
+\[
+  \left|1+\lambda\left[-4\sin^2\left(\frac{i\pi}{2N}\right)\right]\right|
+  \le 1\quad\mbox{($i=1,2,\cdots,N-1$)}.
+\]
+%
+これは
+%
+\[
+  -1\le 1+\lambda\left[-4\sin^2\left(\frac{i\pi}{2N}\right)\right]
+  \le 1\quad\mbox{($i=1,2,\cdots,N-1$)}
+\]
+%
+ということであり、
+%
+\[
+  \lambda\le
+  \frac{1}{2\sin^2\left(\frac{i\pi}{2N}\right)}
+  \quad\mbox{($i=1,2,\cdots,N-1$)}.
+\]
+
+  これから
+%
+\[
+  \lambda\le \frac{1}{2}
+\]
+%
+であれば安定であることが分かる。
+
+\subsection{熱方程式に対する $\theta$ 法}
+
+\begin{eqnarray*}
+  &&\left(
+   \begin{array}{ccccc}
+     1+2\theta\lambda & -\theta\lambda \\
+     -\theta\lambda & 1+2\theta\lambda & -\theta\lambda\\
+             & -\theta\lambda & 1+2\theta\lambda & -\theta\lambda\\
+        & & \ddots & \ddots & \ddots\\
+        & & & -\theta\lambda & 1+2\theta\lambda
+   \end{array}
+  \right)
+  \left(
+   \begin{array}{c}
+     \FDMSOL{1}{j+1}\\
+     \FDMSOL{2}{j+1}\\
+     \vdots\\
+     u_{N-2,j+1}\\
+     \FDMSOL{N-1}{j+1}
+   \end{array}
+  \right) \\
+  &&=
+  \left(
+   \begin{array}{ccccc}
+     1-2(1-\theta)\lambda & (1-\theta)\lambda \\
+     (1-\theta)\lambda & 1-2(1-\theta)\lambda & (1-\theta)\lambda\\
+             & (1-\theta)\lambda & 1-2(1-\theta)\lambda & (1-\theta)\lambda\\
+        & & \ddots & \ddots & \ddots\\
+        & & & (1-\theta)\lambda & 1-2(1-\theta)\lambda
+   \end{array}
+  \right)
+  \left(
+   \begin{array}{c}
+     u_{1,j}\\
+     u_{2,j}\\
+     \vdots\\
+     u_{N-2,j}\\
+     u_{N-1,j}
+   \end{array}
+  \right).
+\end{eqnarray*}
+
+
+\[
+  (I-\theta\lambda T)\Vector{u}_{j+1}=
+  (I+(1-\theta)\lambda T)\Vector{u}_{j}.
+\]
+  ゆえに
+\[
+  \Vector{u}_{j+1}=
+  (I-\theta\lambda T)^{-1}(I+(1-\theta)\lambda T)\Vector{u}_{j}.
+\]
+
+  今度は $g(x)=\left(1+(1-\theta)\lambda x\right)/(1-\theta\lambda x)$ 
+とおくと、
+\[
+  (I-\theta\lambda T)^{-1}(I+(1-\theta)\lambda T)
+  =g(T).
+\]
+  ゆえに安定性の条件は
+\[
+  |g(\mu_i)|\le 1\quad\mbox{($i=1,2,\cdots,N-1$)}.
+\]
+
+  これから、
+\begin{itemize}
+\item
+  $0\le\theta< 1/2$ の場合、
+%
+\[
+  \lambda\le \frac{1}{2(1-2\theta)}
+\]
+%
+であれば安定である。
+%
+\item
+  $1/2\le\theta\le 1$ の場合、無条件に安定である。
+\end{itemize}
+
+
+\subsection{備考}
+
+  $N$ 次正方行列
+\[
+  \left(
+   \begin{array}{ccccc}
+     a & b \\
+     c & a & b \\
+       & c & a & b \\
+       &   & \ddots & \ddots & \ddots\\
+       & & & c & a
+   \end{array}
+  \right)
+\]
+の固有値は
+\[
+  \mu_i=a+2\sqrt{b c}\,\cos\left(\frac{i\pi}{N+1}\right)
+  \quad\mbox{($i=1,2,\cdots,N$)}.
+\]
+
+\section{von Neumann の安定性解析}
+
+(時間がなくて確かめられないのだが、
+この節の記述は抜本的に改良できるのでは？と感じている。
+\begin{quote}
+  『波動方程式に対する差分法』\\
+  \url{https://m-katsurada.sakura.ne.jp/labo/text/wave.pdf}
+\end{quote}
+の1次元波動方程式の初期値境界値問題に対する差分法の解析で
+使った考え方が有効だと想像している。)
+
+\medskip
+
+  von Neumann 法、あるいは Fourier 級数法と呼ばれる安定性解析手法につ
+いて述べる。
+
+  前節の行列法は、行列の固有値の解析が困難な場合も多いため、応用家には
+こちらの方法の方が人気があるらしい。ただし、いつもきちんと解析できると
+は限らず、大ざっぱな目安を得て満足するというものらしい。正直に言って、
+これを書いている時点で、筆者はあまり良く理解できていない。
+
+  Smith \cite{Smith} や田端 \cite{田端1} に色々書いてある。
+
+  歴史的には、von Neumann によって開発され、
+O'Brien, Hyman, Kaplan\cite{OBrien-Hyman-Kaplan} で発表された、とある。
+この方法は、厳密には、定数係数線形差分方程式の初期値問題にしか適用できない。
+
+  これは、初期値に誤差が含まれているときに、その誤差を Fourier 級数で
+表し、これが時間の経過と共にどうなるか (増幅されるのか、減衰するのか) 
+を Fourier の変数分離法で調べる、というのが基本的なアイディアである。
+関数の定義域を $[0,\ell]$ として、誤差関数 $E(x,t)$ が
+\[
+  E(x,0)=\sum_{n}A_n e^{\sqrt{-1}n\pi x/\ell}
+\]
+を満たすとしよう。問題の線形性から、もしも各項
+\[
+   e^{\sqrt{-1}n\pi x/\ell}
+\]
+を初期値とした場合に時刻 $t$ における状態が分かれば、$E(x,t)$ は完全に
+決定される。
+
+\[
+  E_{p,q}=e^{\sqrt{-1}\beta x}e^{\sqrt{-1}\alpha t}|_{x=ph, t=q\tau}
+         =e^{\sqrt{-1}\beta p h}e^{\sqrt{-1}\alpha q\tau}
+         =\xi^q e^{\sqrt{-1}\beta p h}.
+\]
+ただし、$\xi=e^{\alpha\tau}$ である。
+
+\[
+  E(x,t)=\sum_{n}A_n B_n(t) e^{\sqrt{-1}n\pi x/\ell}
+\]
+であることが
+
+  $h=\ell/N$ とおき、$[0,\ell]$ の $N$ 等分点 $p h$ ($p=0,1,\cdots,N$) 
+における誤差 $E(ph,0)$ を $E_p$ で表す。
+\[
+  E_p=\sum_{n=0}^N A_ne^{\sqrt{-1}\beta_n p h}
+ \quad\mbox{($p=0,1,\cdots,N$)}
+\]
+は $\{A_n\}_{n=0,1,\cdots,N}$ を決定するのに十分である。
+
+\paragraph{$1$ 次元熱方程式に対する完全陰公式}
+  熱方程式 $u_t=u_{xx}$ の完全陰差分方程式
+\[
+  \frac{u_{p,q+1}-u_{p,q}}{\tau}
+  =\frac{u_{p+1,q+1}-2u_{p,q+1}+u_{p-1,q+1}}{h^2}
+\]
+の安定性を調べる。誤差関数 $E_{p,q}$ は、差分解 $u_{p,q}$ と同じ差分方
+程式を満たすので、
+\[
+  E_{p,q}=\xi^qe^{\sqrt{-1}\beta p h}
+\]
+を に代入すると
+\[
+  e^{\sqrt{-1}\beta p h}\xi^{q+1}
+  =\lambda(e^{\sqrt{-1}\beta(p-1)h}\xi^{q+1}
+         -2e^{\sqrt{-1}\beta p h}\xi^{q+1}
+         + e^{\sqrt{-1}\beta(p+1)h}\xi^{q+1}
+          ).
+\]
+これを $e^{\sqrt{-1}\beta p h}\xi^q$ で割れば
+\[
+  \xi-1=\lambda\xi(e^{\sqrt{-1}\beta h}-2+e^{-\sqrt{-1}\beta h})
+       =\lambda\xi(2\cos\beta h-2)
+       =-4\lambda\xi\sin^2(\beta h/2).
+\]
+ゆえに
+\[
+  \xi=\frac{1}{1+4\lambda\xi\sin^2(\beta h/2)}.
+\]
+これから明らかに $|\xi|\le 1$ であり、$\lambda$ の値によらず、安定であ
+ることが分かる。 \qed
+
+\paragraph{$1$ 次元波動方程式に対する陽公式}
+  波動方程式 $u_{t t}=u_{x x}$ に対する陽公式
+\[
+  \frac{u_{p,q+1}-2u_{p,q}+u_{p,q-1}}{\tau^2}
+  =
+  \frac{u_{p+1,q}-2u_{p,q}+u_{p-1,q}}{h^2}
+\]
+の安定性を考える。
+
+  $u_{p,q}=e^{\sqrt{-1}\beta p h}\xi^q$ を代入すると、
+\[
+  \xi-2+\xi^{-1}=\lambda^2
+  (
+  e^{\sqrt{-1}\beta h}-2+e^{-\sqrt{-1}\beta h}
+  ).
+\]
+ゆえに
+\[
+  \xi-2+\xi^{-1}=\lambda^2(2\cos\beta h-2)=-4\lambda^2\sin^2(\beta h/2).
+\]
+これから
+\[
+  \xi^2-2 A\xi+1=0, \quad
+  A=1-2\lambda^2\sin^2(\beta h/2).
+\]
+  2次方程式の根の公式から
+\[
+  \xi=A\pm\sqrt{A^2-1}
+\]
+であるが、
+\begin{enumerate}[(1)]
+\item
+  $A^2>1$ の場合は、$A>1$ または $A<-1$ であるが、
+\begin{enumerate}
+\item
+  $A>1$ の場合 $A+\sqrt{A^2-1}>A>1$ ゆえ $\xi>1$.
+\item
+  $A<-1$ の場合 $A-\sqrt{A^2-1}<A<-1$ ゆえ $\xi<-1$.
+\end{enumerate}
+となるので、$|\xi|>1$ となり、安定性の条件は満たされない。
+\item
+  $A^2\le 1$ の場合は、$\xi=A\pm \sqrt{1-A^2}\sqrt{-1}$ であり、
+\[
+ |\xi|=\sqrt{A^2+(1-A^2)}=1.
+\]
+ゆえに、安定性の条件は満たされる。
+\end{enumerate}
+まとめると、
+\begin{center}
+  安定 $\LongIff$ $|A|\le 1$.
+\end{center}
+ゆえに
+\[
+  -1\le 1-2\lambda^2\sin^2(\beta h/2)\le 1.
+\]
+これから
+\[
+  \lambda^2 \le \frac{1}{\sin^2(\beta h/2)}.
+\]
+ $\beta$ の任意性から $\lambda^2\le 1$ が導かれる。 \qed
+
+\section{ADI法の安定性の解析}\label{節:ADI法の安定性の解析}
+
+  「ADI 法は無条件安定」と良く言われているが、
+筆者は証明を見かけたことはない。拙い証明を以下に示す。
+
+長方形領域 $\Omega:=(0,W)\times(0,H)$ における熱方程式の初期値境界値問題
+\begin{align}
+  &u_{tt}(x,y,t)=\Laplacian u(x,y,t)
+  \quad\mbox{($(x,y,t)\in\Omega\times(0,\infty)$)},\\
+  &u(x,y,t)=0\quad\mbox{($(x,y)\in\Gamma:=\rd\Omega$, $t\in(0,\infty)$)},\\
+  &u(x,y,0)=u_0(x,y)\quad\mbox{($(x,y)\in\overline\Omega$)}
+\end{align}
+に対する ADI法の差分方程式は、
+\begin{align}
+  &\frac{U^{n+1/2}_{ij}-U^{n}_{ij}}{\tau/2}
+  =\frac{U^{n+1/2}_{i+1,j}-2U^{n+1/2}_{ij}+U^{n+1/2}_{i-1,j}}{h_x^2}
+   +\frac{U^{n}_{i,j+1}-2U^{n}_{ij}+U^{n}_{i,j-1}}{h_y^2},
+  \label{eq:nからn+1/2}\\
+  &\frac{U^{n+1}_{ij}-U^{n+1/2}_{ij}}{\tau/2}
+  =\frac{U^{n+1/2}_{i+1,j}-2U^{n+1/2}_{ij}+U^{n+1/2}_{i-1,j}}{h_x^2}
+   +\frac{U^{n+1}_{i,j+1}-2U^{n+1}_{ij}+U^{n+1}_{i,j-1}}{h_y^2},
+  \label{eq:n+1/2からn+1} \\
+  &U_{i,j}^{\ell}=0\quad\mbox{($i=0$ or $i=N_x$ or $j=0$ or $j=N_y$;
+  $\ell=1/2,1,3/2,2,5/2,\dots$)},
+  \label{eq:境界条件から来る方程式}\\
+  &U_{ij}^0=u_0(x_i,y_j)
+ \quad\mbox{($i=0,1,\dots,N_x$; $j=0,1,\dots,N_y$)}
+\end{align}
+である。
+
+\begin{screen}
+\begin{jtheorem}[ADI法の無条件安定性]
+  $\{U_{ij}^\ell\}$ が (\ref{eq:nからn+1/2}), 
+(\ref{eq:n+1/2からn+1}), (\ref{eq:境界条件から来る方程式}) を
+満たすならば、任意の $n\in\N_{0}$ に対して、
+\begin{equation}
+  \sum_{i=1}^{N_x-1}\sum_{j=1}^{N_y-1}\left|U^{n+1}_{ij}\right|^2
+  \le
+  \sum_{i=1}^{N_x-1}\sum_{j=1}^{N_y-1}\left|U^{n}_{ij}\right|^2
+  \label{eq:ADI法の無条件安定性}
+\end{equation}
+が成り立つ。
+\end{jtheorem}
+\end{screen}
+
+(\ref{eq:nからn+1/2}), (\ref{eq:n+1/2からn+1}) は、
+\[
+ \lambda_x:=\frac{\tau/2}{h_x^2},\quad \lambda_y:=\frac{\tau/2}{h_y^2}
+\]
+とおくと\footnote{後で $\theta$ 法と比較するためには、
+$\lambda_x=\tau/h_x^2$, $\lambda_y=\tau/h_y^2$ とおく方がよいかもしれないが、
+次の (\ref{eq:n->n+1/2}),  (\ref{eq:n+1/2->n+1}) で分数が出るのを嫌った。}、
+\begin{align}
+ & (1+2\lambda_x)U^{n+1/2}{ij}-\lambda_x(U^{n+1/2}_{i+1,j}+U^{n+1/2}_{i-1,j})
+ =(1-2\lambda_y)U^{n}{ij}+\lambda_y(U^{n}_{i,j+1}+U^{n}_{i,j-1}),
+  \label{eq:n->n+1/2} \\
+ & (1+2\lambda_y)U^{n+1}{ij}-\lambda_y(U^{n+1}_{i,j+1}+U^{n+1}_{i,j-1})
+ =(1-2\lambda_x)U^{n+1/2}{ij}+\lambda_x(U^{n+1/2}_{i+1,j}+U^{n+1/2}_{i-1,j})
+  \label{eq:n+1/2->n+1}
+\end{align}
+と書き直される。
+
+  式を簡単にするため、
+\[
+  p:=N_x-1,\quad q:=N_y-1,\quad N:=p q
+\]
+とおき、
+\[
+  U^{\ell}_{ij}=U^{\ell}_{p(j-1)+i}
+\]
+によって $U^\ell_k$ ($k=1,2,\dots,N$) を定め、
+\[
+ \Vector{U}^{\ell}:=(U^\ell_1,U^\ell_2,\cdots,U^\ell_{N})^T
+ \quad\mbox{($\ell=0,\dfrac{1}{2},1,\dfrac{3}{2},\dots$)}
+\]
+というベクトルを定義すると、
+(\ref{eq:n->n+1/2}),  (\ref{eq:n+1/2->n+1}) は
+\begin{align}
+  &\left\{I_q\otimes\left[(1+2\lambda_x)I_p-\lambda_x J_p\right]\right\}
+   \Vector{U}^{n+1/2}
+  =\left\{\left[(1-2\lambda_y)I_q+\lambda_y J_q\right]\otimes I_p\right\}
+   \Vector{U}^{n},\\
+  &\left\{\left[(1+2\lambda_y)I_q-\lambda_yJ_q\right]\otimes I_p\right\}
+   \Vector{U}^{n+1}
+  =\left\{I_q\otimes\left[(1-2\lambda_x)I_p+\lambda_xJ_p\right]\right\}
+   \Vector{U}^{n+1/2}
+\end{align}
+と書き直される。
+ここで $\otimes$ は行列の Kronecker 積を表す:
+\[
+  A\otimes B
+ =\left(
+  \begin{matrix}
+   a_{11}B & a_{12}B & \cdots & a_{1n} B \\
+   a_{21}B & a_{22}B & \cdots & a_{2n} B \\
+   \vdots &          &        &  \vdots  \\
+   a_{m1}B & a_{m2}B & \cdots & a_{mn} B
+  \end{matrix}
+  \right)\quad
+  \mbox{($A=(a_{ij})\in\R^{m\times n},\quad B\in\R^{k\times \ell}$)}.
+\]
+
+ゆえに
+\begin{align}
+ \Vector{U}^{n+1}
+ &=\left\{\left[(1+2\lambda_y)I_q-\lambda_yJ_q\right]\otimes I_p\right\}^{-1}
+  \left\{I_q\otimes\left[(1-2\lambda_x)I_p+\lambda_xJ_p\right]\right\}
+  \label{eq:n->n+1段}\\
+ &\times
+  \left\{I_q\otimes\left[(1+2\lambda_x)I_p-\lambda_x J_p\right]\right\}^{-1}
+  \left\{\left[(1-2\lambda_y)I_q+\lambda_y J_q\right]\otimes I_p\right\}
+  \Vector{U}^{n}.\nonumber
+\end{align}
+
+  Kronecker 積の性質を二三紹介する。
+\begin{screen}
+\begin{jproposition}
+  $(A\otimes B)^T=A^T\otimes B^T$,
+  $(A\otimes B)^\ast=A^\ast\otimes B^\ast$.
+特に実対称行列の Kronecker 積は実対称行列で、
+ユニタリー行列の Kronecker 積はユニタリー行列である。
+\end{jproposition}
+\end{screen}
+\begin{proof}
+  (略) \qed
+\end{proof}
+
+\begin{screen}
+\begin{jproposition}
+  $A_1$, $A_2\in \R^{q\times q}$ かつ $B_1$,
+$B_2\in \R^{p\times p}$ とするとき、
+\[
+  (A_1\otimes B_1)(A_2\otimes B_2)=(A_1 A_2)\otimes(B_1 B_2).
+\]
+\end{jproposition}
+\end{screen}
+\begin{proof}
+  (略) \qed
+\end{proof}
+
+  これから、もちろん任意個数の積について
+\begin{equation}
+  (A_1\otimes B_1)(A_2\otimes B_2)\cdots (A_r\otimes B_r)
+ =(A_1 A_2\cdots A_r)\otimes(B_1 B_2\cdots B_r)
+  \label{eq:r個の積}
+\end{equation}
+が成り立つことが分かる。また $A\in GL(q;\R)$, $B\in GL(p;\R)$ とするとき、
+\begin{equation}
+  A\otimes B\in GL(q p;\R),\quad
+ \left(A\otimes B\right)^{-1}=A^{-1}\otimes B^{-1}.
+ \label{eq:逆行列のテンソル積}
+\end{equation}
+
+  $r=4$ についての (\ref{eq:r個の積}) と、
+(\ref{eq:逆行列のテンソル積}) を用いて (\ref{eq:n->n+1段}) を変形すると
+\begin{align*}
+ \Vector{U}^{n+1}
+ &=\left\{
+    \left[(1+2\lambda_y)I_q-\lambda_yJ_q\right]^{-1}
+    \left[(1-2\lambda_y)I_q+\lambda_y J_q\right]
+   \right\}\\
+ &\quad\otimes
+  \left\{
+     \left[(1-2\lambda_x)I_p+\lambda_xJ_p\right]
+     \left[(1+2\lambda_x)I_p-\lambda_x J_p\right]^{-1}
+  \right\}
+  \Vector{U}^{n}.
+\end{align*}
+
+記述を簡潔にするため、
+\begin{align*}
+  &A_{q,\lambda_y}:=
+    \left[(1+2\lambda_y)I_q-\lambda_yJ_q\right]^{-1}
+    \left[(1-2\lambda_y)I_q+\lambda_y J_q\right],\\
+  &B_{p,\lambda_x}:=
+     \left[(1-2\lambda_x)I_p+\lambda_xJ_p\right]
+     \left[(1+2\lambda_x)I_p-\lambda_x J_p\right]^{-1}
+\end{align*}
+とおくと、
+\begin{equation}
+  \Vector{U}^{n+1}
+  =\left[A_{q,\lambda_y}\otimes B_{p,\lambda_x}\right]\Vector{U}^{n}.
+  \label{eq:漸化式}
+\end{equation}
+以下 $A_{q,\lambda_y}$, $B_{p,\lambda_x}$ の固有値について調べる。
+
+\begin{screen}
+\begin{jlemma}
+  $N\in\N$, $N\ge 3$ とするとき、
+\[
+ J:=
+ \left(
+ \begin{matrix}
+  0 & 1 & & \\
+  1 & 0 & 1 & \\
+    & \ddots & \ddots & \ddots \\
+    &        & 1      & 0 & 1 \\
+    &        &        & 1 & 0
+ \end{matrix}
+ \right)\in \R^{(N-1)\times (N-1)},
+\]
+\[
+  h:=1/N, \quad x_j:=j h\quad \mbox{($j=1,2,\dots,N-1$)},
+\]
+\[
+  \lambda_n:=2\cos n\pi h,\quad
+  \Vector{v}_n:=
+  \left(
+  \begin{matrix}
+   \sin n\pi x_1 \\ \sin n\pi x_2 \\ \vdots \\ \sin n\pi x_{N-1}
+  \end{matrix}
+  \right)
+ \quad\mbox{($n=1,2,\dots,N-1$)}
+\]
+とおくと、
+\[
+ -2<\lambda_1<\lambda_2<\dots<\lambda_{N-1}<2,
+\]
+\[
+  J \Vector{v}_n=\lambda_n\Vector{v}_n
+ \quad\mbox{($n=1,2,\dots,N-1$)}
+\]
+が成り立つ。
+すなわち $\{\lambda_n; n=1,2,\dots,N-1\}$ は $J$ の固有値全体で、
+$\Vector{v}_n$ は $J$ の固有値 $\lambda_n$ に属する固有ベクトルである。
+\end{jlemma}
+\end{screen}
+\begin{proof}
+  これは 1 次元熱方程式に対する差分法を調べるときに登場する。
+  『発展系の数値解析の続き』
+ (\url{https://m-katsurada.sakura.ne.jp/labo/text/heat-fdm-0-add.pdf})
+  に書いておいた。 \qed
+\end{proof}
+\begin{screen}
+\begin{jproposition}\label{命題:行列のスペクトル解析}
+  $\lambda>0$, $r\in\N$, $r\ge 2$ とするとき、
+\begin{align*}
+  A&:=\left[(1+2\lambda)I_{r}-\lambda J_r\right]^{-1}
+     \left[(1-2\lambda)I_{r}+\lambda J_r\right]
+    =\left[(1-2\lambda)I_{r}+\lambda J_r\right]
+     \left[(1+2\lambda)I_{r}-\lambda J_r\right]^{-1}
+\end{align*}
+の固有値は $(-1,1)$ に含まれる。
+\end{jproposition}
+\end{screen}
+\begin{proof}
+  上の補題から $J_r$ の固有値は $(-2,2)$ に含まれることが分かる。
+\[
+  f(x):=\frac{(1-2\lambda)+\lambda x}{(1+2\lambda)-\lambda x}\quad
+  \mbox{($x\in[-2,2]$)}
+\]
+とおくと (分母が $0$ となるのは $x=(1+2\lambda)/\lambda
+=2+\dfrac{1}{\lambda}$ のときであるから、
+$\lambda>0$, $x\in[-2,2]$ のとき、分母は $0$ にならない)、
+$A=f(J_r)$ である。
+\[
+  f'(x)=\frac{2\lambda}{\left[(1+2\lambda)-\lambda x\right]^2}>0
+\]
+であるから、$f$ は狭義単調増加で、
+\[
+ f(-2)=\frac{1-4\lambda}{1+4\lambda}=-1+\frac{2}{1+4\lambda}>-1,\quad
+ f(2)=1
+\]
+であるから、$f((-2,2))\subset(-1,1)$.
+Frobenius の定理 (それは普通行列の多項式の話で、
+ここでは行列の有理式だから、
+「スペクトル写像定理\footnote{$A$ の固有値全体を $\sigma(A)$ と書くとき、
+スペクトル写像定理とは、集合についての等式
+\[
+  f(\sigma(A))=\sigma(f(A))
+\]
+のことを言う。}」というべき？) から、
+$A$ の固有値は $(-1,1)$ に含まれる。 \qed
+\end{proof}
+
+…手元の線形代数のテキストを何冊か見てみたが、
+「フロベニウスの定理」が載っていないものが多いのには少々驚いた
+(先日放送大学の授業を視ていても出て来たし、
+そんなにマイナーな定理ではないと思うのだが…)。
+Dunford 積分とか、
+自己共役作用素のスペクトル分解とやると「やりすぎ」気味なので、
+ここでは次の形のささやかな命題を証明つきで与えておく。
+\begin{screen}
+\begin{jproposition}[有理式版フロベニウスの定理]
+  $A$ は $n$ 次正方行列で、
+$\lambda_1$, $\dots$, $\lambda_n$ が固有値 (i.e., $\det(x I-A)
+=\dsp\prod_{i=1}^n(x-\lambda_i)$) で、
+\[
+  f(x)=\frac{q(x)}{p(x)}\quad\mbox{($p(x)$, $q(x)$ は多項式)}
+\]
+であり、$p(\lambda_i)\ne 0$ ($i=1,\dots,n$) とする。
+このとき $p(A)$ は正則で、
+$p(A)^{-1}q(A)$ ($=q(A)p(A)^{-1}$) の固有値は $f(\lambda_1)$, $\dots$,
+$f(\lambda_n)$ である。
+\end{jproposition}
+\end{screen}
+\begin{proof}
+  適当な unitary 行列 $U$ を取ると、
+\[
+  U^\ast A U=
+ \left(
+ \begin{matrix}
+  \lambda_1 & & \mbox{\LARGE$\ast$}\\
+            & \ddots & \\
+  \bigzerol & & \lambda_n
+ \end{matrix}
+ \right)
+\]
+となる ($A$ の Schur 分解)。これから
+\[
+  U^\ast p (A) U=
+ \left(
+ \begin{matrix}
+  p(\lambda_1) & & \mbox{\LARGE$\ast'$}\\
+            & \ddots & \\
+  \bigzerol & & p(\lambda_n)
+ \end{matrix}
+ \right),\quad
+  U^\ast q(A) U=
+ \left(
+ \begin{matrix}
+  q(\lambda_1) & & \mbox{\LARGE$\ast''$}\\
+            & \ddots & \\
+  \bigzerol & & q(\lambda_n)
+ \end{matrix}
+ \right).
+\]
+第1式の逆行列を取ると
+\[
+  U^\ast p(A)^{-1} U
+ =
+ \left(
+ \begin{matrix}
+  p(\lambda_1)^{-1} & & \mbox{\LARGE$\ast'''$}\\
+            & \ddots & \\
+  \bigzerol & & p(\lambda_n)^{-1}
+ \end{matrix}
+ \right).
+\]
+(左辺については、$(A B C)^{-1}=C^{-1}B^{-1}A^{-1}$ と、
+$U^\ast=U^{-1}$ を用いた。
+右辺については、
+``上三角行列の逆行列は上三角行列'' という定理と、
+仮定 $p(\lambda_i)\ne 0$ を用いた。)
+
+ゆえに
+\begin{align*}
+  U^{\ast}p(A)^{-1}q(A)U
+  &=U^{\ast}p(A)^{-1}U U^\ast q(A)U
+   =\left(
+    \begin{matrix}
+     p(\lambda_1)^{-1}q(\lambda_1) & & \mbox{\LARGE$\ast\ast$}\\
+          & \ddots & \\
+     \bigzerol & & p(\lambda_n)^{-1}q(\lambda_n)
+    \end{matrix}
+    \right)\\
+   &=\left(
+    \begin{matrix}
+     f(\lambda_1) & & \mbox{\LARGE$\ast\ast$}\\
+          & \ddots & \\
+     \bigzerol & & f(\lambda_n)
+    \end{matrix}
+    \right).
+\end{align*}
+  これから $p(A)^{-1}q(A)$ の固有値は
+$f(\lambda_1)$, $\dots$, $f(\lambda_n)$ である。 \qed
+\end{proof}
+
+\begin{jremark}
+  $1$ 次元熱方程式の初期値境界値問題
+\begin{align*}
+  &u_t(x,t)=u_{xx}(x,t)\quad\mbox{($x\in(0,1)$, $t\in(0,\infty)$)},\\
+  &u(0,t)=u(1,t)=0\quad\mbox{($t\in(0,\infty)$)},\\
+  &u(x,0)=f(x)\quad\mbox{($x\in[0,1]$)}
+\end{align*}
+に対する $\theta$ 法の差分方程式は
+\[
+  [(1+2\theta\lambda)I_{N-1}-\theta\lambda J_{N-1}]\Vector{U}^{n+1}
+ =\left\{[1-2(1-\theta)\lambda]I_{N-1}+(1-\theta)\lambda J_{N-1}
+  \right\}\Vector{U}^{n}
+\]
+である。ゆえに
+\[
+ \Vector{U}^{n+1}
+ =\left[(1+2\theta\lambda)I_{N-1}-\theta\lambda J_{N-1}\right]^{-1}
+  \left\{[1-2(1-\theta)\lambda]I_{N-1}+(1-\theta)\lambda J_{N-1}\right\}
+ \Vector{U}^{n}.
+\]
+  いわゆる Crank-Nicolson 法、すなわち $\theta=1/2$ の場合は
+\[
+ \Vector{U}^{n+1}
+ =\left[(1+\lambda)I_{N-1}-\frac{\lambda}{2} J_{N-1}\right]^{-1}
+  \left\{[(1-\lambda)I_{N-1}+\frac{\lambda}{2} J_{N-1}\right\}
+ \Vector{U}^{n}.
+\]
+  $\lambda=2\lambda'$ とおくと、
+\[
+ \Vector{U}^{n+1}
+ =\left[(1+2\lambda')I_{N-1}-\lambda' J_{N-1}\right]^{-1}
+  \left\{[(1-2\lambda')I_{N-1}+\lambda' J_{N-1}\right\}
+ \Vector{U}^{n}.
+\]
+  つまり、命題\ref{命題:行列のスペクトル解析} の行列は、
+1次元熱方程式を Crank-Nicolson 法で解く場合に現れる行列と同じである！ \qed
+\end{jremark}
+
+さて、ゴールの仕方は色々あるが、
+まずは、次の命題を使ってやっつける。
+\begin{screen}
+\begin{jproposition}
+  $A\in\C^{m\times m}$ の固有値を $\lambda_i$ ($i=1,2,\dots,m$),
+$B\in\C^{n\times n}$  の固有値を $\mu_j$ ($j=1,2,\dots,n$) とするとき、
+$A\otimes B$ の固有値は $\lambda_i\mu_j$ ($i=1,2,\dots,m$; $j=1,2,\dots,n$).
+\end{jproposition}
+\end{screen}
+\begin{proof}
+  (常識的な結果なので、「証明略」としてもよいかもしれないが、
+証明を示すと、実対称行列の場合に固有ベクトルがどうなるかが見えて、
+後々役に立ちそうなので、さぼらずに書いておく。)
+
+  適当なユニタリー行列 $Q_1$, $Q_2$ によって、
+$A$, $B$ は上三角行列に変換できる (Schur 分解):
+\[
+  Q_1^\ast A Q_1
+ =\left(
+  \begin{matrix}
+   \lambda_1 &           &       & \mbox{\huge$\ast$}\\
+             & \lambda_2 & \\
+             &           & \ddots \\
+   \bigzerol &           &        & \lambda_m
+  \end{matrix}
+  \right),\quad
+  Q_2^\ast B Q_2
+ =\left(
+  \begin{matrix}
+   \mu_1 &           &       & \mbox{\huge$\ast$}\\
+             & \mu_2 & \\
+             &           & \ddots \\
+   \bigzerol &           &        & \mu_n
+  \end{matrix}
+  \right).
+\]
+この右辺をそれぞれ $R_1$, $R_2$ とおくと、(\ref{eq:r個の積}) を用いて
+\begin{align*}
+  R_1\otimes R_2=(Q_1^\ast A Q_1)\otimes (Q_2^\ast B Q_2)
+  =(Q_1^\ast\otimes Q_2^\ast)(A\otimes B)(Q_1\otimes Q_2).
+\end{align*}
+一般に $(A\otimes B)^\ast=A^\ast\otimes B^\ast$ が成り立つので、
+\[
+  R_1\otimes R_2=(Q_1\otimes Q_2)^\ast(A\otimes B)(Q_1\otimes Q_2).
+\]
+  $Q:=Q_1\otimes Q_2$ とおくと、
+$R_1\otimes R_2=Q^\ast (A\otimes B)Q$ であるが、
+実は $Q$ はユニタリー行列である。実際
+\[
+  Q^\ast Q=(Q_1\otimes Q_2)^\ast (Q_1\otimes Q_2)
+         =(Q_1^\ast\otimes Q_2^\ast)(Q_1\otimes Q_2)
+         =(Q_1^\ast Q_1)\otimes(Q_2^\ast Q_2)
+         =I_m\otimes I_n=I_{mn}.
+\]
+$R_1\otimes R_2$ は上三角行列であるから、
+$A\otimes B$ の固有値はその対角成分に等しく、
+$\lambda_i\mu_j$ である。 \qed
+\end{proof}
+
+従って、(\ref{eq:漸化式}) における $A_{q,\lambda_y}$, $B_{p,\lambda_x}$
+の固有値はいずれも $(-1,1)$ に属するので、
+$A_{q,\lambda_y}\otimes B_{p,\lambda_x}$ の固有値も
+(それらの積であるから) $(-1,1)$ に属する。
+
+  次は常識であるが、念のため。
+
+\begin{screen}
+\begin{jproposition}
+  実対称行列 $A$ に対して、
+ベクトルのノルムとして普通の Euclid ノルム $\|\cdot\|_2$ を採ったときの
+作用素ノルム $\|A\|$は、その行列のスペクトル半径 $r(A)$ に等しい:
+\[
+  \|A\|=r(A).
+\]
+  念のため、出て来た言葉の定義を式で示しておくと、
+\[
+  \left\|A\right\|:=\sup_{x\ne 0}\frac{\|A x\|_2}{\|x\|_2}
+  \quad\mbox{($A\in \R^{r\times r}$)},\quad
+  \|y\|_2:=\sqrt{\sum_{j=1}^r y_j^2}\quad\mbox{($y=(y_j)\in\R^r$)},
+\]
+\[
+  r(A):=\max\{|\lambda|; \lambda\in\sigma(A)\},\quad
+  \sigma(A):=\mbox{$A$ の固有値全体の集合}.
+\]
+\end{jproposition}
+\end{screen}
+
+ゆえに
+\[
+  \|A_{q,\lambda_y}\otimes B_{p,\lambda_x}\|
+  =r(A_{q,\lambda_y}\otimes B_{p,\lambda_x})<1.
+\]
+従って、
+\[
+  \|\Vector{U}^{n+1}\|_2\le \|\Vector{U}^{n}\|_2.
+\]
+これは (\ref{eq:ADI法の無条件安定性}) に他ならない。
+
+\begin{yodan}[MATLAB で試しながら…]
+  この問題はもう片付いてしまったが、
+MATLAB や Octave で次のようにして、
+実際に行列のスペクトル半径が計算できて、心強い。
+\begin{screen}
+\begin{verbatim}
+ p=4
+ q=5
+ Ip=eye(p,p)
+ Iq=eye(q,q)
+ Jp=diag(ones(p-1,1),1)+diag(ones(p-1,1),-1)
+ Jq=diag(ones(q-1,1),1)+diag(ones(q-1,1),-1)
+ P=inv((1+2*lambda)*Ip-lambda*Jp)*((1-2*lambda)*Ip+lambda*Jp)
+ max(abs(eig(P)))
+\end{verbatim}
+\end{screen}
+  ここでは $\left[(1+2\lambda)I_p-\lambda J_p\right]^{-1}
+[(1-2\lambda)I_p+\lambda J_p]$ のスペクトル半径を計算している。 \qed
+\end{yodan}
+
+ところで (\ref{eq:n->n+1段}) の行列は 4 つの因子の積であるが、
+これらは互いに可換なので\footnote{$A=I_q\otimes J_p$, $B=J_q\otimes I_p$
+とするとき、$A B=(I_q\otimes J_p)(J_q\otimes
+I_p)=(I_qJ_q)\otimes(J_pI_p)
+=J_q\otimes J_p$, $BA=(J_q\otimes I_p)(I_q\otimes J_p)=
+(J_q I_q)\otimes(I_p J_p)=J_q\otimes J_p$.}、
+好きなように順番を入れ替えることができる。
+その結果を解釈することはちょっと面白い…
+
+\section{\texorpdfstring{$\theta$ 法の安定性解析}{θ法の安定性解析}}\label{節:θ法の安定性解析}
+
+  この節を読む前に \ref{節:ADI法の安定性の解析}「ADI法の安定性解析」を
+読むことをお勧めする。
+
+長方形領域 $\Omega:=(0,W)\times(0,H)$ における熱方程式の初期値境界値問題
+\begin{align}
+  &u_{tt}(x,y,t)=\Laplacian u(x,y,t)
+  \quad\mbox{($(x,y,t)\in\Omega\times(0,\infty)$)},\\
+  &u(x,y,t)=0\quad\mbox{($(x,y)\in\Gamma:=\rd\Omega$, $t\in(0,\infty)$)},\\
+  &u(x,y,0)=u_0(x,y)\quad\mbox{($(x,y)\in\overline\Omega$)}
+\end{align}
+に対する $\theta$ 法の差分方程式は
+($\psi(i,j)=(j-1)(N_x-1)+i$ という番号づけを用いる場合)、
+\begin{align*}
+ &A:=\left[1+2\theta(\lambda_x+\lambda_y)\right]I_{q}\otimes J_{p}
+    -\theta\lambda_x I_{q}\otimes J_{p}
+    -\theta\lambda_y J_{q}\otimes I_{p},\\
+ &B:=\left[1-2(1-\theta)(\lambda_x+\lambda_y)\right]I_{q}\otimes J_{p}
+    +(1-\theta)\lambda_x I_{q}\otimes J_{p}
+    +(1-\theta)\lambda_y J_{q}\otimes I_{p}
+\end{align*}
+とおくとき、
+\[
+  A\Vector{U}^{n+1}=B\Vector{U}^n
+\]
+と表される。ただし記述を簡潔にするため
+\[
+  p:=N_x-1,\quad q:=N_y-1,\quad N:=p q
+\]
+とおいた。
+
+\subsection{\texorpdfstring{$\|\cdot\|_2$}{\textbardbl ・\textbardbl\UTF{2082}} ノルムに関する安定性}
+
+安定性を調べるには、
+\begin{align*}
+ A^{-1}B
+ &=\left\{
+   \left[
+   1+2\theta(\lambda_x+\lambda_y)
+   \right]I_{q}\otimes I_{p}
+   -\theta\lambda_x I_{q}\otimes J_{p}
+   -\theta\lambda_y J_{q}\otimes I_{p}
+  \right\}^{-1}\\
+ &\quad\times
+  \left\{
+   \left[
+   1-2(1-\theta)(\lambda_x+\lambda_y)
+   \right]I_{q}\otimes I_{p}
+   +(1-\theta)\lambda_x I_{q}\otimes J_{p}
+   +(1-\theta)\lambda_y J_{q}\otimes I_{p}
+  \right\}
+\end{align*}
+の固有値を調べれば良い。
+
+  $J_p$, $J_q$ の固有値、固有ベクトルは分かっている。
+\[
+ \Vector{v}_i:=
+ \left(
+ \begin{matrix}
+  \sin\left(i\pi/N_y\right)\\
+  \sin\left(2i\pi/N_y\right)\\
+  \vdots\\
+  \sin\left(q i\pi/N_y\right)
+ \end{matrix}
+ \right)\in\R^q,\quad
+ \lambda_i:=2\cos(i\pi/N_y)\quad
+ \mbox{($i=1,2,\dots,q$)},
+\]
+\[
+ \Vector{w}_j:=
+ \left(
+ \begin{matrix}
+  \sin\left(j\pi/N_x\right)\\
+  \sin\left(2j\pi/N_x\right)\\
+  \vdots\\
+  \sin\left(pj\pi/N_x\right)
+ \end{matrix}
+ \right)\in\R^p,\quad
+ \mu_j:=2\cos(j\pi/N_x)\quad
+ \mbox{($j=1,2,\dots,p$)}
+\]
+とおくと、
+\[
+  J_q\Vector{v}_i=\lambda_i\Vector{v}_i\quad\mbox{($i=1,2,\dots,q$)},\quad
+  J_p\Vector{w}_j=\lambda_j\Vector{w}_j\quad\mbox{($j=1,2,\dots,p$)}
+\]
+が成り立つ。
+
+このとき、
+\[
+ \Vector{e}_{ij}:=\Vector{v}_i\otimes\Vector{w}_j
+\]
+とおくと、
+\begin{equation}
+ (I_q\otimes J_p)\Vector{e}_{ij}=\mu_j\Vector{e}_{ij},
+ \quad
+ (J_q\otimes I_p)\Vector{e}_{ij}=\lambda_i\Vector{e}_{ij}
+ \label{eq:固有値は何か}
+\end{equation}
+となる。
+
+念のため、用いたことを命題としてまとめておく。
+\begin{screen}
+\begin{jproposition}
+  $A\in\C^{q\times q}$, $B\in\C^{p\times p}$, $\Vector{v}\in\C^q$, 
+ $\Vector{w}\in\C^p$, $\lambda\in\C$, $\mu\in\C$ が
+\[
+  A\Vector{v}=\lambda\Vector{v},\quad B\Vector{w}=\mu\Vector{w}
+\]
+を満たすとき、
+\[
+  (A\otimes B)(\Vector{v}\otimes\Vector{w})
+  =\lambda\mu(\Vector{v}\otimes\Vector{w}).
+\]
+\end{jproposition}
+\end{screen}
+\begin{proof}
+\begin{align*}
+  (A\otimes B)(\Vector{v}\otimes\Vector{w})
+ &=\left(
+   \begin{matrix}
+    a_{11}B & a_{12}B & \cdots & a_{1q} B\\
+    a_{21}B & a_{22}B & \cdots & a_{2q} B\\
+    \vdots  &         &        & \cdots \\
+    a_{q1}B & a_{q2}B & \cdots & a_{qq} B
+   \end{matrix}
+   \right)
+   \left(
+   \begin{matrix}
+    v_1\Vector{w}\\
+    v_2\Vector{w}\\
+    \vdots\\
+    v_q\Vector{w}
+   \end{matrix}
+   \right)\\
+ &=\left(
+   \begin{matrix}
+    (a_{11}v_1+\cdots+a_{1q}v_q)B\Vector{w}\\
+    (a_{21}v_1+\cdots+a_{2q}v_q)B\Vector{w}\\
+    \vdots\\
+    (a_{q1}v_1+\cdots+a_{qq}v_q)B\Vector{w}
+   \end{matrix}
+   \right)
+  =\left(
+   \begin{matrix}
+    \lambda v_1\mu\Vector{w}\\
+    \lambda v_2\mu\Vector{w}\\
+    \vdots\\
+    \lambda v_q\mu\Vector{w}\\
+   \end{matrix}
+   \right)
+  =\lambda\mu(\Vector{v}\otimes\Vector{w}).   \qed
+\end{align*}
+\end{proof}
+
+  (\ref{eq:固有値は何か}) より
+\begin{align*}
+ &B\Vector{e}_{ij}
+ =\left\{
+  \left[1-2(1-\theta)(\lambda_x+\lambda_y)\right]
+   +(1-\theta)\lambda_x\mu_j
+   +(1-\theta)\lambda_y\lambda_i
+  \right\}\Vector{e}_{ij},\\
+ &A\Vector{e}_{ij}
+ =\left\{
+  \left[1+2\theta(\lambda_x+\lambda_y)\right]
+   -\theta\lambda_x\mu_j
+   -\theta\lambda_y\lambda_i
+  \right\}\Vector{e}_{ij}
+\end{align*}
+となるので、
+\[
+  A^{-1}B\Vector{e}_{ij}
+ =\frac{\left[1-2(1-\theta)(\lambda_x+\lambda_y)\right]
+   +(1-\theta)\lambda_x\mu_j
+   +(1-\theta)\lambda_y\lambda_i}
+       {\left[1+2\theta(\lambda_x+\lambda_y)\right]
+   -\theta\lambda_x\mu_j
+   -\theta\lambda_y\lambda_i}\Vector{e}_{ij}.
+\]
+ゆえに $\Vector{e}_{ij}$ は $A^{-1}B$ の固有ベクトルで、
+\[
+ \nu_{ij}:=\frac{\left[1-2(1-\theta)(\lambda_x+\lambda_y)\right]
+   +(1-\theta)\lambda_x\mu_j
+   +(1-\theta)\lambda_y\lambda_i}
+       {\left[1+2\theta(\lambda_x+\lambda_y)\right]
+   -\theta\lambda_x\mu_j
+   -\theta\lambda_y\lambda_i}
+\]
+が対応する固有値である。
+この $\nu_{ij}$ の定義式の分母はつねに $1$ 以上である。
+実際、$\mu_j<2$, $\lambda_i<2$ であるから
+\[
+  \left[1+2\theta(\lambda_x+\lambda_y)\right]
+   -\theta\lambda_x\mu_j
+   -\theta\lambda_y\lambda_i
+ \ge
+ 1+2\theta(\lambda_x+\lambda_y)-\theta\lambda_x\cdot 2-\theta\lambda_y\cdot 2
+ =1.
+\]
+(なお、$\theta>0$ の場合は、分母は $1$ より大きいことが分かる。)
+
+また、つねに $\nu_{ij}\le 1$ である。実際、$1-\theta\ge 0$, $\mu_j<2$,
+$\lambda_i<2$ に注意すると
+\begin{align*}
+  \mbox{$\nu_{ij}$ の定義式の分子}\le
+  1-2(1-\theta)(\lambda_x+\lambda_y)
+  +(1-\theta)\lambda_x\cdot2
+  +(1-\theta)\lambda_y\cdot2=1
+\end{align*}
+であるから、
+既に見た「$\mbox{$\nu_{ij}$ の分母}\ge 1$」と合わせて $\nu_{ij}\le 1$.
+
+(実は、場合分けしてていねいに議論すると、
+真不等式 $\nu_{ij}<1$ が得られる。)
+
+ゆえに
+\[
+   r(A^{-1}B)\le 1\quad \LongIff\quad \forall i\forall j\quad -1\le\nu_{ij}.
+\]
+\begin{align*}
+  -1\le\nu_{ij} &\LongIff\quad
+  -\left\{
+ [1+2\theta(\lambda_x+\lambda_y)]-\theta\lambda_x\mu_j-\theta\lambda_y\lambda_i
+   \right\}\\
+ &\qquad\qquad
+  \le\left[1-2(1-\theta)(\lambda_x+\lambda_y)\right]
+  +(1-\theta)\lambda_x\mu_j+(1-\theta)\lambda_y\lambda_i\\
+ &\LongIff\quad
+  0\le2-2(1-2\theta)(\lambda_x+\lambda_y)+(1-2\theta)\lambda_x\mu_j
+ +(1-2\theta)\lambda_y\lambda_i \\
+ &\LongIff\quad
+  0\le2-(1-2\theta)\left[\lambda_x(2-\mu_j)+\lambda_y(2-\lambda_i)\right]\\
+ &\LongIff\quad
+  (1-2\theta)\left[\lambda_x(2-\mu_j)+\lambda_y(2-\lambda_i)\right]\le 2.
+\end{align*}
+
+  もしも $\dfrac{1}{2}\le\theta\le1$ ならば、
+最後の不等式の左辺は $0$ 以下であるから、
+この不等式は無条件で成立することが分かる。
+
+$0\le\theta<\dfrac{1}{2}$ の場合は割り算して、
+\[
+  -1\le\nu_{ij}\quad\LongIff\quad
+  \lambda_x(2-\mu_j)+\lambda_y(2-\lambda_i)\le\frac{2}{1-2\theta}.
+\]
+ゆえに
+\begin{align*}
+ r(A^{-1}B)\le 1\quad&\LongIff\quad
+  \lambda_x(2-\mu_p)+\lambda_y(2-\lambda_q)\le\frac{2}{1-2\theta}.
+\end{align*}
+
+  つねに $2-\mu_p<4$, $2-\lambda_q<4$ であるが、
+$N_x$, $N_y$ を十分大きくすると $2-\mu_p$, $2-\lambda_q$ はいくらでも
+$4$ に近くなることに注意すると、
+\begin{enumerate}[(a)]
+\item
+  もしも $\lambda_x+\lambda_y\le\dfrac{1}{2(1-2\theta)}$ ならば、
+$r(A^{-1}B)\le 1$ が成り立つ (実は $r(A^{-1}B)<1$ が成立)。
+\item
+  もしも  $\lambda_x+\lambda_y>\dfrac{1}{2(1-2\theta)}$ ならば、
+$N_x$, $N_y$ を十分大きくすることによって $r(A^{-1}B)> 1$ となる。
+\end{enumerate}
+
+\begin{screen}
+\begin{jtheorem}[$\theta$ 法の $\|\cdot\|_2$ 安定性解析]
+  $\theta$ 法の差分方程式 $A\Vector{U}^{n+1}
+=B\Vector{U}^n$ の係数行列 $A$, $B$ について、
+次の (i), (ii), (iii) が成り立つ。
+\begin{enumerate}[(i)]
+\item
+  $\dfrac{1}{2}\le\theta\le 1$ ならば、つねに $r(A^{-1}B)<1$.
+\item
+  $0\le\theta<\dfrac{1}{2}$,
+$\lambda_x+\lambda_y\le\dfrac{1}{2(1-2\theta)}$ ならば、
+$r(A^{-1}B)<1$.
+\item
+  $0\le\theta<\dfrac{1}{2}$,
+$\lambda_x+\lambda_y>\dfrac{1}{2(1-2\theta)}$ ならば、
+$N_x$ と $N_y$ が十分大きいとき $r(A^{-1}B)>1$.
+\end{enumerate}
+従って、
+$\theta$ 法の差分スキームが $\|\cdot\|_2$ ノルムの意味で安定であるための
+必要十分条件は
+\[
+  \dfrac{1}{2}\le\theta\le 1\quad
+  \mbox{または}\quad
+  \left(
+   0\le\theta<\dfrac{1}{2}\quad\mbox{かつ}\quad
+   \lambda_x+\lambda_y\le\frac{1}{2(1-2\theta)}
+  \right).
+\]
+\end{jtheorem}
+\end{screen}
+\begin{screen}
+\begin{jcorollary}[Crank-Nicolson 法の無条件安定性]
+  Crank-Nicolson 法 ($\theta=1/2$) では、
+任意の時間刻み $\tau$, 任意の分割数 $N_x,N_y$ に対して、
+\[
+  \left\|\Vector{U}^{n+1}\right\|_2
+  \le
+  \left\|\Vector{U}^{n}\right\|_2\quad\mbox{($n=0,1,2,\dots$)}.
+\]
+すなわち
+\[
+  \sum_{i=1}^{N_x-1}\sum_{j=1}^{N_y-1}
+  \left|U^{n+1}_{ij}\right|^2
+  \le
+  \sum_{i=1}^{N_x-1}\sum_{j=1}^{N_y-1}
+  \left|U^{n}_{ij}\right|^2\quad\mbox{($n=0,1,\dots$)}.
+\]
+\end{jcorollary}
+\end{screen}
+
+(議論が「緩い」ような気がする。後で整理すること。)
+
+\subsection{\texorpdfstring{$\|\cdot\|_\infty$}{\textbardbl ・\textbardbl ∞} ノルムに関する安定性}
+
+(とりあえず書いてしまったのだが、
+本来は離散最大値原理の話として書くべきであったと反省している
+)
+
+どうやら、かなり一般の場合に、
+$A\Vector{U}^{n+1}=B\Vector{U}^n$ という差分方程式の解が有界であるためには、
+$B\ge 0$ が必要十分条件であるらしい。
+今の場合 (長方形領域における $\theta$ 法) も、
+$B\ge 0$ であれば、差分解が有界であることを証明できる。
+%
+\[
+ B:=\left[1-2(1-\theta)(\lambda_x+\lambda_y)\right]I_q\otimes I_p
+  +(1-\theta)\lambda_x I_q\otimes J_p
+  +(1-\theta)\lambda_y J_q\otimes I_p
+\]
+%
+であるから、
+$B\ge 0$ であるためには、
+$1-2(1-\theta)(\lambda_x+\lambda_y)\ge 0$ となることが必要十分条件で、
+これは
+%
+\[
+  \theta=1\quad\mbox{または}\quad
+ \left(
+  0\le\theta<1\quad\mbox{かつ}\quad
+ \lambda_x+\lambda_y\le\frac{1}{2(1-\theta)}
+ \right)
+\]
+と同値である。以下、このことを仮定して、$\|B\|_\infty\le 1$ を証明する。
+$B$ の成分を $b_{ij}$ と書くとき、
+\[
+  \forall i\quad \sum_{j=1}^N b_{ij}\le 1
+\]
+であることに注意する
+(多くの $i$ について $\dsp\sum_{j=1}^N b_{ij}=1$ が成り立つ)。
+
+  $\forall\Vector{v}=(v_j)\in\R^N$ に対して、
+\begin{align*}
+  \left|\sum_{j=1}^N b_{ij}v_j\right|
+  &\le\sum_{j=1}^N\left|b_{ij}\right|\left|v_j\right|
+   \le\max_{1\le j\le N}\left|v_j\right|\sum_{j=1}^N\left|b_{ij}\right|
+   =\|\Vector{v}\|_\infty\cdot \sum_{j=1}^N b_{ij}
+   \le\|\Vector{v}\|_\infty.
+\end{align*}
+ゆえに
+\begin{equation}
+  \left\|B\Vector{v}\right\|_\infty
+  =\max_{1\le i\le N}\left|\sum_{j=1}^N b_{ij}v_j\right|
+  \le\|\Vector{v}\|_\infty.
+  \label{eq:Bの評価}
+\end{equation}
+
+一方
+\[
+  A:=\left[1+2\theta(\lambda_x+\lambda_y)\right]I_q\otimes I_p
+  -\theta\lambda_x I_q\otimes J_p
+  -\theta\lambda_y J_q\otimes I_p
+\]
+について調べる。
+  $\theta=0$ のときは $A=I_{qp}$ なので、$A^{-1}=I_{qp}$ であるから、
+\[
+  \left\|A^{-1}\Vector{v}\right\|_\infty=\left\|\Vector{v}\right\|_\infty.
+\]
+  以下 $0<\theta\le 1$ のときを調べる。
+$\forall\Vector{v}\in\R^N$ に対して、
+$\Vector{w}:=A^{-1}\Vector{v}$ とおくと、$\Vector{v}=A\Vector{w}$ である。
+$\Vector{v}$ の典型的な
+(対応する格子点の上下左右の格子点が領域内部にある場合のことを指す)
+成分は
+\[
+  v_i=\left[1+2\theta(\lambda_x+\lambda_y)\right]w_i
+  -\theta\lambda_x(w_{i+1}+w_{i-1})
+  -\theta\lambda_y(w_{i+p}+w_{i-p})
+\]
+となる。このとき
+\begin{align*}
+  \left|v_i\right|
+  &=\left|
+     \left[1+2\theta(\lambda_x+\lambda_y)\right]w_i
+    -\theta\lambda_x\left(w_{i+1}+w_{i-1}\right) 
+    -\theta\lambda_y\left(w_{i+p}+w_{i-p}\right) 
+    \right|\\
+  &\ge\left|\left[1+2\theta(\lambda_x+\lambda_y)\right]w_i\right|
+    -\left|\theta\lambda_x w_{i+1}\right|-\left|\theta\lambda_xw_{i-1}\right|
+    -\left|\theta\lambda_y w_{i+p}\right|-\left|\theta\lambda_yw_{i-p}\right|\\
+  &=\left[1+2\theta(\lambda_x+\lambda_y)\right]\left|w_i\right|
+    -\theta\lambda_x\left|w_{i+1}\right|-\theta\lambda_x\left|w_{i-1}\right|
+    -\theta\lambda_y\left|w_{i+p}\right|-\theta\lambda_y\left|w_{i-p}\right|\\
+  &\ge\left[1+2\theta(\lambda_x+\lambda_y)\right]\left|w_i\right|
+      -2\theta(\lambda_x+\lambda_y)\left\|\Vector{w}\right\|_\infty.
+\end{align*}
+すなわち
+\[
+   \left|v_i\right|
+   \ge\left[1+2\theta(\lambda_x+\lambda_y)\right]\left|w_i\right|
+      -2\theta(\lambda_x+\lambda_y)\left\|\Vector{w}\right\|_\infty.
+\]
+この不等式自体は、任意の $i$ について成立することが分かる。
+$i$ について、両辺の最大値を取って
+\[
+ \max_{1\le i\le N}\left|v_i\right|
+ \ge\max_{1\le i\le N}
+  \left\{
+  \left[1+2\theta(\lambda_x+\lambda_y)\right]\left|w_i\right|
+      -2\theta(\lambda_x+\lambda_y)\left\|\Vector{w}\right\|_\infty
+  \right\}.
+\]
+ゆえに
+\[
+ \left\|\Vector{v}\right\|_\infty
+ \ge\left[1+2\theta(\lambda_x+\lambda_y)\right]\left\|\Vector{w}\right\|_\infty
+    -2\theta(\lambda_x+\lambda_y)\left\|\Vector{w}\right\|_\infty
+  =\left\|\Vector{w}\right\|_\infty.
+\]
+すなわち
+\begin{equation}
+ \left\|A^{-1}\Vector{v}\right\|_\infty=\left\|\Vector{v}\right\|_\infty
+ \le\left\|\Vector{v}\right\|_\infty.
+  \label{eq:Aの逆の評価}
+\end{equation}
+
+(\ref{eq:Bの評価}), (\ref{eq:Aの逆の評価}) から、
+\[
+ \left\|U^{n+1}\right\|_\infty
+ =\left\|A^{-1}B\Vector{U}^n\right\|_\infty
+ \le\left\|B\Vector{U}^n\right\|_\infty
+ \le\left\|\Vector{U}^n\right\|_\infty.
+\]
+以上より、次の定理が得られた。
+
+\begin{screen}
+\begin{jtheorem}[$\theta$ 法の $\|\cdot\|_\infty$ 安定性解析]
+  $\theta$, $\lambda_x$, $\lambda_y$ が
+\[
+ \theta=1\quad\mbox{または}\quad
+  \left(
+  0\le\theta<1\quad\mbox{かつ}\quad\lambda_x+\lambda_y\le\frac{1}{2(1-\theta)}
+  \right)
+\]
+を満たすとき、任意の $n$ について
+\[
+ \left\|\Vector{U}^{n+1}\right\|_\infty\le \left\|\Vector{U}^n\right\|_\infty.
+\]
+\end{jtheorem}
+\end{screen}
+
+  $\theta$, $\lambda_x$, $\lambda_y$ が定理の条件を満たさない場合に、
+$\|\Vector{U}^n\|_\infty$ が発散しうることを示したいが、
+これについては後日。
+
+\appendix
+
+\chapter{サンプル・プログラムについて}\label{chapter:プログラム}
+
+\section{プログラムの公開}
+
+この文書に載っているプログラムは、
+自由に利用してもらって構わない。
+
+ほとんどのプログラムは、
+\htlink{『公開プログラムのページ』}
+{https://m-katsurada.sakura.ne.jp/program/} からファイルとして入手できる。
+
+\section{GLSC ライブラリィ}
+
+多くのプログラムで、
+グラフィックスの実現に \textbf{GLSC} (を少し機能拡張したもの) を用いている。
+
+GLSC については、
+\htlink{『明大数学科計算機室ユーザーのためのGLSCの紹介』}
+{https://m-katsurada.sakura.ne.jp/labo/howto/intro-glsc/} を見よ。
+
+\section{matrix ライブラリィ}
+
+  多くのプログラムで、
+matrix library という小さな自作ライブラリィを使用している。
+詳しい説明は
+\url{https://m-katsurada.sakura.ne.jp/program/matrix/matrix-lib3.tar.gz}
+の中の文書を読んでもらいたいが
+(文書を直接 WWW に載せて、その URL を書くようにしよう)、
+C 言語のプログラムで簡単に行列を扱えるようにするためのもので、
+使い方の要点は、例えば
+\begin{screen}
+\begin{verbatim}
+#include "matrix.h"
+  ...
+  matrix a;
+\end{verbatim}
+\end{screen}
+のように変数 \texttt{a} を宣言しておき、
+\begin{screen}
+\begin{verbatim}
+  a = new_matrix(3, 2);
+  if (a == NULL) {
+    fprintf(stderr, "メモリーが確保できませんでした。\n");
+    exit(1);
+  }
+\end{verbatim}
+\end{screen}
+のようにすると、\texttt{double a[3][2];} と宣言したのと同様に
+\texttt{a[0][0]}, \texttt{a[0][1]},
+\texttt{a[1][0]}, \texttt{a[1][1]},
+\texttt{a[2][0]}, \texttt{a[2][1]} という \texttt{double} 型の
+変数が使えるようになる、ということである。
+
+\renewcommand{\bibname}{参考文献}
+\bibliography{reference}\addcontentsline{toc}{chapter}{\bibname}
+
+\end{document}
