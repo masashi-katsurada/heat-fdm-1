@@ -9,7 +9,7 @@ FILES2	=	adi.pdf theta.pdf
 default: all
 all: $(PROGS) $(FILES)
 
-heat-fdm-1.dvi: heat-fdm-1.tex heat1g-v2.c ../reference/reference.tex heat2d/*.c
+heat-fdm-1.dvi: heat-fdm-1.tex heat1g-v2.c reference.bib heat2d/*.c
 	uplatex heat-fdm-1.tex
 	upbibtex heat-fdm-1
 	uplatex heat-fdm-1.tex
