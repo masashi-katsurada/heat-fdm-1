@@ -5,12 +5,12 @@
 heat-fdm-1/
 add/
 old/
-heat2d/
+heat2d/*
 !heat2d/heat2n-i-v2.c
 !heat2d/heat2d-i-naive2.c
 !heat2d/heat2d-i-naive2.out
 !heat2d/heat2n-i-naive2.out
-heat-fdm-1-progs/
+heat-fdm-1-progs/*
 !heat-fdm-1-progs/heat2d-i-naive.c
 !heat-fdm-1-progs/heat2d-i.c
 stability/
