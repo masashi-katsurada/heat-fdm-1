@@ -1,0 +1,42 @@
+# 次の2行で、heat-fdm-0.pdf 以外の pdf ファイルは無視する、という設定
+*.pdf
+!heat-fdm-0.pdf
+
+heat-fdm-2/
+add/
+old/
+heat2d/
+!heat2d/heat2n-i-v2.c
+!heat2d/heat2d-i-naive2.c
+!heat2d/heat2d-i-naive2.out
+!heat2d/heat2n-i-naive2.out
+heat-fdm-1-progs/
+!heat-fdm-1-progs/heat2d-i-naive.c
+!heat-fdm-1-progs/heat2d-i.c
+stability/
+
+# LaTeX の諸々
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.log
+*.out
+*.toc
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.synctex(busy)
+
+# Vim のスワップファイル
+*.swp
+
+# Emacs の中間生成ファイル
+.#*
+
+#
+WARNINGS
+
+#
+ascmac.sty
+tascmac.sty
