@@ -1,8 +1,8 @@
-# 次の2行で、heat-fdm-0.pdf 以外の pdf ファイルは無視する、という設定
+# 次の2行で、heat-fdm-1.pdf 以外の pdf ファイルは無視する、という設定
 *.pdf
-!heat-fdm-0.pdf
+!heat-fdm-1.pdf
 
-heat-fdm-2/
+heat-fdm-1/
 add/
 old/
 heat2d/
