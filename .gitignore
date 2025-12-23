@@ -14,6 +14,7 @@ heat-fdm-1-progs/
 !heat-fdm-1-progs/heat2d-i-naive.c
 !heat-fdm-1-progs/heat2d-i.c
 stability/
+matlab-prog/
 
 # LaTeX の諸々
 *.aux
